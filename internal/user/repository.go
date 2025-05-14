@@ -1,7 +1,7 @@
 package user
 
 import (
-	"context"
+	"context" // Используем стандартный контекст
 	"errors"
 
 	"github.com/Vovarama1992/go-bagdoor-bot/internal/db"
@@ -30,13 +30,13 @@ func (r *PostgresRepository) CreateUser(ctx context.Context, u *User) error {
 		RETURNING id, registered_at;
 	`
 
-	// Выполнение запроса
+	// Выполнение запроса с использованием стандартного context.Context
 	return r.DB.Pool.QueryRow(ctx, query,
 		u.TgUsername,
 		u.TgID,
 		u.FirstName,
 		u.LastName,
-		u.PhoneNumber, // Здесь сохраняем номер телефона
+		u.PhoneNumber,
 	).Scan(&u.ID, &u.RegisteredAt)
 }
 
@@ -48,6 +48,7 @@ func (r *PostgresRepository) GetByTgID(ctx context.Context, tgID int64) (*User, 
 	`
 
 	var u User
+	// Используем стандартный context.Context
 	err := r.DB.Pool.QueryRow(ctx, query, tgID).Scan(
 		&u.ID,
 		&u.TgUsername,

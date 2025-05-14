@@ -1,0 +1,26 @@
+# бинарники
+/bot
+*.exe
+*.out
+*.test
+
+# модули
+/vendor/
+
+# зависимости
+go.sum
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# dotenv
+.env
+
+# Docker volumes (если что-то монтируешь локально)
+db_data/
