@@ -79,16 +79,21 @@ func isSubscribed(c tele.Context) bool {
 	bot := c.Bot()
 	user := c.Sender()
 
-	chatID := os.Getenv("BAGDOOR_CHAT_ID")          // например: -1001978312876
-	channelUsername := os.Getenv("BAGDOOR_CHANNEL") // например: @bagdoor
+	chatID := os.Getenv("BAGDOOR_CHAT_ID")       // группа
+	channelID := os.Getenv("BAGDOOR_CHANNEL_ID") // канал
 
-	if chatID == "" || channelUsername == "" {
-		log.Println("Не заданы BAGDOOR_CHAT_ID или BAGDOOR_CHANNEL в .env")
+	if chatID == "" || channelID == "" {
+		log.Println("Не заданы BAGDOOR_CHAT_ID или BAGDOOR_CHANNEL_ID в .env")
 		return false
 	}
 
 	// Проверка канала
-	channel := &tele.Chat{Username: channelUsername}
+	channelInt, err := strconv.ParseInt(channelID, 10, 64)
+	if err != nil {
+		log.Printf("Ошибка парсинга BAGDOOR_CHANNEL_ID: %v", err)
+		return false
+	}
+	channel := &tele.Chat{ID: channelInt}
 	member, err := bot.ChatMemberOf(channel, user)
 	if err != nil {
 		log.Printf("Ошибка проверки канала: %v", err)
@@ -100,12 +105,12 @@ func isSubscribed(c tele.Context) bool {
 	}
 
 	// Проверка чата
-	chatIDInt, err := strconv.ParseInt(chatID, 10, 64)
+	chatInt, err := strconv.ParseInt(chatID, 10, 64)
 	if err != nil {
 		log.Printf("Ошибка парсинга BAGDOOR_CHAT_ID: %v", err)
 		return false
 	}
-	chat := &tele.Chat{ID: chatIDInt}
+	chat := &tele.Chat{ID: chatInt}
 	member, err = bot.ChatMemberOf(chat, user)
 	if err != nil {
 		log.Printf("Ошибка проверки чата: %v", err)
