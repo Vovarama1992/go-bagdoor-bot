@@ -3,6 +3,7 @@ package user
 import (
 	"context" // Используем стандартный контекст
 	"errors"
+	"log"
 
 	"github.com/Vovarama1992/go-bagdoor-bot/internal/db"
 )
@@ -20,7 +21,10 @@ func (r *PostgresRepository) CreateUser(ctx context.Context, u *User) error {
 	// Проверяем, существует ли пользователь с таким tgID
 	existingUser, err := r.GetByTgID(ctx, u.TgID)
 	if err == nil && existingUser != nil {
+		log.Printf("Пользователь уже существует: tg_id=%d", u.TgID)
 		return errors.New("пользователь с таким Telegram ID уже существует")
+	} else if err != nil && err.Error() != "no rows in result set" {
+		log.Printf("Ошибка при проверке существующего пользователя: %v", err)
 	}
 
 	// Запрос на добавление нового пользователя
@@ -30,14 +34,21 @@ func (r *PostgresRepository) CreateUser(ctx context.Context, u *User) error {
 		RETURNING id, registered_at;
 	`
 
-	// Выполнение запроса с использованием стандартного context.Context
-	return r.DB.Pool.QueryRow(ctx, query,
+	err = r.DB.Pool.QueryRow(ctx, query,
 		u.TgUsername,
 		u.TgID,
 		u.FirstName,
 		u.LastName,
 		u.PhoneNumber,
 	).Scan(&u.ID, &u.RegisteredAt)
+
+	if err != nil {
+		log.Printf("Ошибка при вставке пользователя: %v", err)
+		return err
+	}
+
+	log.Printf("Пользователь успешно создан: id=%d, tg_id=%d", u.ID, u.TgID)
+	return nil
 }
 
 // Получение пользователя по tgID
