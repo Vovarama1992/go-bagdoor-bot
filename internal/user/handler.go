@@ -2,6 +2,9 @@ package user
 
 import (
 	"context"
+	"log"
+	"os"
+	"strconv"
 	"time"
 
 	tele "gopkg.in/telebot.v3"
@@ -72,23 +75,55 @@ func PhoneHandler(s *Service) tele.HandlerFunc {
 	}
 }
 
-// Функция для проверки подписки
 func isSubscribed(c tele.Context) bool {
-	// Здесь должна быть реальная логика проверки подписки через Telegram API
-	// Временно возвращаем true, чтобы пользователи могли продолжить регистрацию.
+	bot := c.Bot()
+	user := c.Sender()
+
+	chatID := os.Getenv("BAGDOOR_CHAT_ID")          // например: -1001978312876
+	channelUsername := os.Getenv("BAGDOOR_CHANNEL") // например: @bagdoor
+
+	if chatID == "" || channelUsername == "" {
+		log.Println("Не заданы BAGDOOR_CHAT_ID или BAGDOOR_CHANNEL в .env")
+		return false
+	}
+
+	// Проверка канала
+	channel := &tele.Chat{Username: channelUsername}
+	member, err := bot.ChatMemberOf(channel, user)
+	if err != nil {
+		log.Printf("Ошибка проверки канала: %v", err)
+		return false
+	}
+	if member.Role == "left" {
+		log.Println("Пользователь не подписан на канал")
+		return false
+	}
+
+	// Проверка чата
+	chatIDInt, err := strconv.ParseInt(chatID, 10, 64)
+	if err != nil {
+		log.Printf("Ошибка парсинга BAGDOOR_CHAT_ID: %v", err)
+		return false
+	}
+	chat := &tele.Chat{ID: chatIDInt}
+	member, err = bot.ChatMemberOf(chat, user)
+	if err != nil {
+		log.Printf("Ошибка проверки чата: %v", err)
+		return false
+	}
+	if member.Role == "left" {
+		log.Println("Пользователь не подписан на чат")
+		return false
+	}
+
 	return true
 }
 
 // Функция для создания разметки кнопок для подписки
 func subscribeMarkup() *tele.ReplyMarkup {
 	btnSubscribed := tele.Btn{Text: "✅ Я подписался"}
-	btnPhone := tele.Btn{Contact: true, Text: "📱 Отправить номер"}
-
 	markup := &tele.ReplyMarkup{}
-	markup.Reply(
-		markup.Row(btnSubscribed),
-		markup.Row(btnPhone),
-	)
+	markup.Reply(markup.Row(btnSubscribed))
 	return markup
 }
 
