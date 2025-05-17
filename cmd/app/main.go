@@ -60,9 +60,5 @@ func main() {
 })
 
 	log.Println("bot running...")
-	bot.Handle("/getchatid", func(c tele.Context) error {
-		log.Printf("Chat ID: %d", c.Chat().ID)
-		return c.Send("Chat ID зафиксирован в логах.")
-	})
 	bot.Start()
 }
