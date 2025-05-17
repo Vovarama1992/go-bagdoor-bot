@@ -49,6 +49,15 @@ func main() {
 	bot.Handle("/start", user.HandleStart(userService))
 	bot.Handle("✅ Я подписался", user.SubscribeHandler(userService))
 	bot.Handle(tele.OnContact, user.PhoneHandler(userService))
+        bot.Handle("/getchannelid", func(c tele.Context) error {
+	chat, err := bot.ChatByUsername("@bagdoor") // или другой username
+	if err != nil {
+		log.Printf("Ошибка получения канала: %v", err)
+		return c.Send("Ошибка получения канала.")
+	}
+	log.Printf("Channel ID: %d", chat.ID)
+	return c.Send("Channel ID зафиксирован.")
+})
 
 	log.Println("bot running...")
 	bot.Handle("/getchatid", func(c tele.Context) error {
