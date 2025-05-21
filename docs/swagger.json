@@ -1,0 +1,281 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "contact": {}
+    },
+    "paths": {
+        "/auth/telegram": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Авторизация через Telegram",
+                "parameters": [
+                    {
+                        "description": "Init data от Telegram",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/http.TelegramAuthRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/http.TelegramAuthResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid signature",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "User error или Token error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/flights": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "flights"
+                ],
+                "summary": "Создать рейс",
+                "parameters": [
+                    {
+                        "description": "Данные рейса",
+                        "name": "flight",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/http.CreateFlightRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/http.FlightResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Невалидный JSON или формат даты",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "401": {
+                        "description": "Неверный или отсутствует токен",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Ошибка сервера при создании рейса",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/orders": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "orders"
+                ],
+                "summary": "Создать заказ",
+                "parameters": [
+                    {
+                        "description": "Данные заказа",
+                        "name": "order",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/http.OrderRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/http.OrderResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Невалидный JSON или формат дат",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "401": {
+                        "description": "Невалидный токен",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Пользователь не найден",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Ошибка сервера при создании заказа",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "http.CreateFlightRequest": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string",
+                    "example": "Лечу налегке, могу взять документы."
+                },
+                "destination": {
+                    "type": "string",
+                    "example": "Москва"
+                },
+                "origin": {
+                    "type": "string",
+                    "example": "Санкт-Петербург"
+                }
+            }
+        },
+        "http.FlightResponse": {
+            "type": "object",
+            "properties": {
+                "flight_number": {
+                    "type": "string",
+                    "example": "Рейс #1234-5678"
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 17
+                }
+            }
+        },
+        "http.OrderRequest": {
+            "type": "object",
+            "properties": {
+                "cost": {
+                    "type": "number",
+                    "example": 1000
+                },
+                "description": {
+                    "type": "string",
+                    "example": "Нужно привезти из Москвы в СПб"
+                },
+                "destination_city": {
+                    "type": "string",
+                    "example": "Санкт-Петербург"
+                },
+                "end_date": {
+                    "description": "dd/mm/yy",
+                    "type": "string",
+                    "example": "05/06/25"
+                },
+                "origin_city": {
+                    "type": "string",
+                    "example": "Москва"
+                },
+                "reward": {
+                    "type": "number",
+                    "example": 100
+                },
+                "start_date": {
+                    "description": "dd/mm/yy",
+                    "type": "string",
+                    "example": "01/06/25"
+                },
+                "store_link": {
+                    "type": "string",
+                    "example": "https://store.com/item/123"
+                },
+                "tg_id": {
+                    "type": "integer",
+                    "example": 123456789
+                },
+                "title": {
+                    "type": "string",
+                    "example": "Заказ на доставку"
+                }
+            }
+        },
+        "http.OrderResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer",
+                    "example": 42
+                },
+                "order_number": {
+                    "type": "string",
+                    "example": "Заказ #0123-0042"
+                }
+            }
+        },
+        "http.TelegramAuthRequest": {
+            "type": "object",
+            "properties": {
+                "initData": {
+                    "description": "данные из телеги",
+                    "type": "string",
+                    "example": "..."
+                }
+            }
+        },
+        "http.TelegramAuthResponse": {
+            "type": "object",
+            "properties": {
+                "access_token": {
+                    "type": "string",
+                    "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6..."
+                },
+                "tg_id": {
+                    "type": "integer"
+                }
+            }
+        }
+    }
+}

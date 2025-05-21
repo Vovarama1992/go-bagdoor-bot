@@ -14,10 +14,24 @@ services:
       - db_data:/var/lib/postgresql/data
 
   bot:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile.bot
     restart: always
     env_file:
       - .env
+    depends_on:
+      - db
+
+  server:
+    build:
+      context: .
+      dockerfile: Dockerfile.server
+    restart: always
+    env_file:
+      - .env
+    ports:
+      - "8080:8080"
     depends_on:
       - db
 

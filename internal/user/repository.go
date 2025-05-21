@@ -76,3 +76,25 @@ func (r *PostgresRepository) GetByTgID(ctx context.Context, tgID int64) (*User, 
 	}
 	return &u, nil
 }
+
+func (r *PostgresRepository) CreateFromTgToWebApp(ctx context.Context, u *User) error {
+	query := `
+		INSERT INTO users (tg_username, tg_id, first_name, last_name)
+		VALUES ($1, $2, $3, $4)
+		RETURNING id, registered_at;
+	`
+
+	err := r.DB.Pool.QueryRow(ctx, query,
+		u.TgUsername,
+		u.TgID,
+		u.FirstName,
+		u.LastName,
+	).Scan(&u.ID, &u.RegisteredAt)
+
+	if err != nil {
+		log.Printf("Ошибка при создании пользователя: %v", err)
+		return err
+	}
+
+	return nil
+}

@@ -1,0 +1,188 @@
+definitions:
+  http.CreateFlightRequest:
+    properties:
+      description:
+        example: Лечу налегке, могу взять документы.
+        type: string
+      destination:
+        example: Москва
+        type: string
+      origin:
+        example: Санкт-Петербург
+        type: string
+    type: object
+  http.FlightResponse:
+    properties:
+      flight_number:
+        example: 'Рейс #1234-5678'
+        type: string
+      id:
+        example: 17
+        type: integer
+    type: object
+  http.OrderRequest:
+    properties:
+      cost:
+        example: 1000
+        type: number
+      description:
+        example: Нужно привезти из Москвы в СПб
+        type: string
+      destination_city:
+        example: Санкт-Петербург
+        type: string
+      end_date:
+        description: dd/mm/yy
+        example: 05/06/25
+        type: string
+      origin_city:
+        example: Москва
+        type: string
+      reward:
+        example: 100
+        type: number
+      start_date:
+        description: dd/mm/yy
+        example: 01/06/25
+        type: string
+      store_link:
+        example: https://store.com/item/123
+        type: string
+      tg_id:
+        example: 123456789
+        type: integer
+      title:
+        example: Заказ на доставку
+        type: string
+    type: object
+  http.OrderResponse:
+    properties:
+      id:
+        example: 42
+        type: integer
+      order_number:
+        example: 'Заказ #0123-0042'
+        type: string
+    type: object
+  http.TelegramAuthRequest:
+    properties:
+      initData:
+        description: данные из телеги
+        example: '...'
+        type: string
+    type: object
+  http.TelegramAuthResponse:
+    properties:
+      access_token:
+        example: eyJhbGciOiJIUzI1NiIsInR5cCI6...
+        type: string
+      tg_id:
+        type: integer
+    type: object
+info:
+  contact: {}
+paths:
+  /auth/telegram:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Init data от Telegram
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/http.TelegramAuthRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/http.TelegramAuthResponse'
+        "400":
+          description: Bad request
+          schema:
+            type: string
+        "401":
+          description: Invalid signature
+          schema:
+            type: string
+        "500":
+          description: User error или Token error
+          schema:
+            type: string
+      summary: Авторизация через Telegram
+      tags:
+      - auth
+  /flights:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Данные рейса
+        in: body
+        name: flight
+        required: true
+        schema:
+          $ref: '#/definitions/http.CreateFlightRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/http.FlightResponse'
+        "400":
+          description: Невалидный JSON или формат даты
+          schema:
+            type: string
+        "401":
+          description: Неверный или отсутствует токен
+          schema:
+            type: string
+        "500":
+          description: Ошибка сервера при создании рейса
+          schema:
+            type: string
+      summary: Создать рейс
+      tags:
+      - flights
+  /orders:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Данные заказа
+        in: body
+        name: order
+        required: true
+        schema:
+          $ref: '#/definitions/http.OrderRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/http.OrderResponse'
+        "400":
+          description: Невалидный JSON или формат дат
+          schema:
+            type: string
+        "401":
+          description: Невалидный токен
+          schema:
+            type: string
+        "404":
+          description: Пользователь не найден
+          schema:
+            type: string
+        "500":
+          description: Ошибка сервера при создании заказа
+          schema:
+            type: string
+      summary: Создать заказ
+      tags:
+      - orders
+swagger: "2.0"
