@@ -19,11 +19,10 @@ type UserResponse struct {
 // --- Orders ---
 
 type OrderRequest struct {
-	TgID            int64    `json:"tg_id" example:"123456789"`
 	Title           string   `json:"title" example:"Заказ на доставку"`
 	Description     string   `json:"description" example:"Нужно привезти из Москвы в СПб"`
-	StoreLink       *string  `json:"store_link" example:"https://store.com/item/123"`
-	Cost            *float64 `json:"cost" example:"1000"`
+	StoreLink       *string  `json:"store_link,omitempty" example:"https://store.com/item/123"`
+	Cost            *float64 `json:"cost,omitempty" example:"1000"`
 	Reward          float64  `json:"reward" example:"100"`
 	OriginCity      string   `json:"origin_city" example:"Москва"`
 	DestinationCity string   `json:"destination_city" example:"Санкт-Петербург"`

@@ -48,9 +48,6 @@ definitions:
       store_link:
         example: https://store.com/item/123
         type: string
-      tg_id:
-        example: 123456789
-        type: integer
       title:
         example: Заказ на доставку
         type: string

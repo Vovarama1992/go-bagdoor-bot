@@ -243,10 +243,6 @@ const docTemplate = `{
                     "type": "string",
                     "example": "https://store.com/item/123"
                 },
-                "tg_id": {
-                    "type": "integer",
-                    "example": 123456789
-                },
                 "title": {
                     "type": "string",
                     "example": "Заказ на доставку"
