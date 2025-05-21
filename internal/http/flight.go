@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/Vovarama1992/go-bagdoor-bot/internal/auth"
 )
@@ -12,7 +13,7 @@ import (
 // @Tags flights
 // @Accept json
 // @Produce json
-// @Param flight body CreateFlightRequest true "Данные рейса"
+// @Param flight body FlightRequest true "Данные рейса"
 // @Success 201 {object} FlightResponse
 // @Failure 400 {string} string "Невалидный JSON или формат даты"
 // @Failure 401 {string} string "Неверный или отсутствует токен"
@@ -36,9 +37,15 @@ func (d FlightDeps) createFlightHandler(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	var req CreateFlightRequest
+	var req FlightRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "Невалидный JSON", http.StatusBadRequest)
+		return
+	}
+
+	flightDate, err := time.Parse("02/01/06", req.FlightDate)
+	if err != nil {
+		http.Error(w, "Невалидная дата, используйте формат dd/mm/yy", http.StatusBadRequest)
 		return
 	}
 
@@ -49,7 +56,15 @@ func (d FlightDeps) createFlightHandler(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	f, err := d.FlightService.CreateFlight(ctx, u.TgUsername, tgID, req.Description, req.Origin, req.Destination)
+	f, err := d.FlightService.CreateFlight(
+		ctx,
+		u.TgUsername,
+		tgID,
+		req.Description,
+		req.Origin,
+		req.Destination,
+		flightDate,
+	)
 	if err != nil {
 		http.Error(w, "Не удалось создать рейс", http.StatusInternalServerError)
 		return

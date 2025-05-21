@@ -85,7 +85,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/http.CreateFlightRequest"
+                            "$ref": "#/definitions/http.FlightRequest"
                         }
                     }
                 ],
@@ -176,7 +176,7 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "http.CreateFlightRequest": {
+        "http.FlightRequest": {
             "type": "object",
             "properties": {
                 "description": {
@@ -186,6 +186,11 @@ const docTemplate = `{
                 "destination": {
                     "type": "string",
                     "example": "Москва"
+                },
+                "flight_date": {
+                    "description": "dd/mm/yy",
+                    "type": "string",
+                    "example": "10/06/25"
                 },
                 "origin": {
                     "type": "string",

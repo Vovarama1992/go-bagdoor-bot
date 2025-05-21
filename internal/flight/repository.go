@@ -21,12 +21,13 @@ func (r *PostgresRepository) Create(f *Flight) error {
 			publisher_username,
 			publisher_tg_id,
 			published_at,
+			flight_date,
 			description,
 			origin,
 			destination,
 			status,
 			map_url
-		) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+		) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
 		RETURNING id`
 	return r.DB.Pool.QueryRow(
 		context.Background(),
@@ -35,6 +36,7 @@ func (r *PostgresRepository) Create(f *Flight) error {
 		f.PublisherUsername,
 		f.PublisherTgID,
 		f.PublishedAt,
+		f.FlightDate,
 		f.Description,
 		f.Origin,
 		f.Destination,
@@ -46,7 +48,7 @@ func (r *PostgresRepository) Create(f *Flight) error {
 func (r *PostgresRepository) GetByID(id int) (*Flight, error) {
 	query := `
 		SELECT id, flight_number, publisher_username, publisher_tg_id, 
-		       published_at, description, origin, destination, status, map_url 
+		       published_at, flight_date, description, origin, destination, status, map_url 
 		FROM flights 
 		WHERE id = $1`
 	row := r.DB.Pool.QueryRow(context.Background(), query, id)
@@ -58,6 +60,7 @@ func (r *PostgresRepository) GetByID(id int) (*Flight, error) {
 		&f.PublisherUsername,
 		&f.PublisherTgID,
 		&f.PublishedAt,
+		&f.FlightDate,
 		&f.Description,
 		&f.Origin,
 		&f.Destination,

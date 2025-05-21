@@ -14,7 +14,7 @@ func NewService(repo Repository) *Service {
 	return &Service{repo: repo}
 }
 
-func (s *Service) CreateFlight(ctx context.Context, username string, tgID int64, desc, origin, destination string) (*Flight, error) {
+func (s *Service) CreateFlight(ctx context.Context, username string, tgID int64, desc, origin, destination string, flightDate time.Time) (*Flight, error) {
 	now := time.Now()
 	num := generateFlightNumber(now, tgID)
 	flight := &Flight{
@@ -25,6 +25,7 @@ func (s *Service) CreateFlight(ctx context.Context, username string, tgID int64,
 		Description:       desc,
 		Origin:            origin,
 		Destination:       destination,
+		FlightDate:        flightDate,
 		Status:            StatusPending,
 	}
 	if err := s.repo.Create(flight); err != nil {

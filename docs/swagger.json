@@ -74,7 +74,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/http.CreateFlightRequest"
+                            "$ref": "#/definitions/http.FlightRequest"
                         }
                     }
                 ],
@@ -165,7 +165,7 @@
         }
     },
     "definitions": {
-        "http.CreateFlightRequest": {
+        "http.FlightRequest": {
             "type": "object",
             "properties": {
                 "description": {
@@ -175,6 +175,11 @@
                 "destination": {
                     "type": "string",
                     "example": "Москва"
+                },
+                "flight_date": {
+                    "description": "dd/mm/yy",
+                    "type": "string",
+                    "example": "10/06/25"
                 },
                 "origin": {
                     "type": "string",

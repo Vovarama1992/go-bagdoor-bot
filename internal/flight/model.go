@@ -16,6 +16,7 @@ type Flight struct {
 	FlightNumber      string
 	PublisherUsername string
 	PublisherTgID     int64
+	FlightDate        time.Time
 	PublishedAt       time.Time
 	Description       string
 	Origin            string

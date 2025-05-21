@@ -1,11 +1,15 @@
 definitions:
-  http.CreateFlightRequest:
+  http.FlightRequest:
     properties:
       description:
         example: Лечу налегке, могу взять документы.
         type: string
       destination:
         example: Москва
+        type: string
+      flight_date:
+        description: dd/mm/yy
+        example: 10/06/25
         type: string
       origin:
         example: Санкт-Петербург
@@ -122,7 +126,7 @@ paths:
         name: flight
         required: true
         schema:
-          $ref: '#/definitions/http.CreateFlightRequest'
+          $ref: '#/definitions/http.FlightRequest'
       produces:
       - application/json
       responses:

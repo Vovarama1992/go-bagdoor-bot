@@ -53,20 +53,13 @@ type TelegramAuthResponse struct {
 // --- Flights ---
 
 type FlightRequest struct {
-	TgID        int64  `json:"tg_id" example:"123456789"`
-	Origin      string `json:"origin" example:"Дубай"`
+	Description string `json:"description" example:"Лечу налегке, могу взять документы."`
+	Origin      string `json:"origin" example:"Санкт-Петербург"`
 	Destination string `json:"destination" example:"Москва"`
-	Date        string `json:"date" example:"25/05/25"` // формат: dd/mm/yy
-	Description string `json:"description" example:"Лечу налегке, могу взять вещи"`
+	FlightDate  string `json:"flight_date" example:"10/06/25"` // dd/mm/yy
 }
 
 type FlightResponse struct {
 	ID           int    `json:"id" example:"17"`
 	FlightNumber string `json:"flight_number" example:"Рейс #1234-5678"`
-}
-
-type CreateFlightRequest struct {
-	Description string `json:"description" example:"Лечу налегке, могу взять документы."`
-	Origin      string `json:"origin" example:"Санкт-Петербург"`
-	Destination string `json:"destination" example:"Москва"`
 }
