@@ -110,3 +110,49 @@ func (r *PostgresRepository) GetOrderByID(ctx context.Context, orderID int) (*Or
 
 	return &o, nil
 }
+
+func (r *PostgresRepository) GetAllOrders(ctx context.Context) ([]*Order, error) {
+	query := `
+		SELECT id, order_number, publisher_username, publisher_tg_id, published_at,
+		       origin_city, destination_city, start_date, end_date,
+		       title, description, reward, deposit, cost,
+		       media_urls, type, status
+		FROM orders
+		ORDER BY published_at DESC
+	`
+
+	rows, err := r.DB.Pool.Query(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var orders []*Order
+	for rows.Next() {
+		var o Order
+		if err := rows.Scan(
+			&o.ID,
+			&o.OrderNumber,
+			&o.PublisherUsername,
+			&o.PublisherTgID,
+			&o.PublishedAt,
+			&o.OriginCity,
+			&o.DestinationCity,
+			&o.StartDate,
+			&o.EndDate,
+			&o.Title,
+			&o.Description,
+			&o.Reward,
+			&o.Deposit,
+			&o.Cost,
+			&o.MediaURLs,
+			&o.Type,
+			&o.Status,
+		); err != nil {
+			return nil, err
+		}
+		orders = append(orders, &o)
+	}
+
+	return orders, nil
+}

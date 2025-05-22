@@ -4,16 +4,17 @@ CREATE TABLE flights (
     publisher_username VARCHAR(255),
     publisher_tg_id BIGINT NOT NULL,
     published_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    flight_date DATE NOT NULL,
     description TEXT,
     origin VARCHAR(255),
     destination VARCHAR(255),
-    map_url TEXT,  -- 🔥 Новое поле для ссылки на карту маршрута
-    status VARCHAR(30) NOT NULL CHECK (
+    map_url TEXT,
+    status VARCHAR(50) NOT NULL CHECK (
         status IN (
-            'pending',
-            'approved',
-            'rejected',
-            'deleted'
+            'ожидает модерации',
+            'отмодерирован и опубликован',
+            'отклонён',
+            'удалён'
         )
     )
 );

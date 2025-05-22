@@ -90,4 +90,43 @@ type Repository interface {
 	GetByID(id int) (*Flight, error)
 	UpdateMapURL(id int, url string) error
 	UpdateStatus(id int, status ModerationStatus) error
+	GetAllFlights(ctx context.Context) ([]*Flight, error) // ← добавь это
+}
+
+func (r *PostgresRepository) GetAllFlights(ctx context.Context) ([]*Flight, error) {
+	query := `
+		SELECT id, flight_number, publisher_username, publisher_tg_id,
+		       published_at, flight_date, description, origin, destination, status, map_url
+		FROM flights
+		ORDER BY published_at DESC
+	`
+
+	rows, err := r.DB.Pool.Query(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var flights []*Flight
+	for rows.Next() {
+		var f Flight
+		if err := rows.Scan(
+			&f.ID,
+			&f.FlightNumber,
+			&f.PublisherUsername,
+			&f.PublisherTgID,
+			&f.PublishedAt,
+			&f.FlightDate,
+			&f.Description,
+			&f.Origin,
+			&f.Destination,
+			&f.Status,
+			&f.MapURL,
+		); err != nil {
+			return nil, err
+		}
+		flights = append(flights, &f)
+	}
+
+	return flights, nil
 }

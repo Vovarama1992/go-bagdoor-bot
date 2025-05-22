@@ -67,6 +67,32 @@ const docTemplate = `{
             }
         },
         "/flights": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "flights"
+                ],
+                "summary": "Получить все рейсы",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/http.FlightFullResponse"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Ошибка при получении рейсов",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
             "post": {
                 "consumes": [
                     "application/json"
@@ -118,6 +144,32 @@ const docTemplate = `{
             }
         },
         "/orders": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "orders"
+                ],
+                "summary": "Получить все заказы",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/http.OrderFullResponse"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Ошибка сервера при получении заказов",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
             "post": {
                 "consumes": [
                     "application/json"
@@ -176,6 +228,44 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "http.FlightFullResponse": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "destination": {
+                    "type": "string"
+                },
+                "flight_date": {
+                    "type": "string"
+                },
+                "flight_number": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "map_url": {
+                    "type": "string"
+                },
+                "origin": {
+                    "type": "string"
+                },
+                "published_at": {
+                    "type": "string"
+                },
+                "publisher_tg_id": {
+                    "type": "integer"
+                },
+                "publisher_username": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
         "http.FlightRequest": {
             "type": "object",
             "properties": {
@@ -211,12 +301,78 @@ const docTemplate = `{
                 }
             }
         },
+        "http.OrderFullResponse": {
+            "type": "object",
+            "properties": {
+                "cost": {
+                    "type": "number"
+                },
+                "deposit": {
+                    "type": "number"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "destination_city": {
+                    "type": "string"
+                },
+                "end_date": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "media_urls": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "order_number": {
+                    "type": "string"
+                },
+                "origin_city": {
+                    "type": "string"
+                },
+                "published_at": {
+                    "type": "string"
+                },
+                "publisher_tg_id": {
+                    "type": "integer"
+                },
+                "publisher_username": {
+                    "type": "string"
+                },
+                "reward": {
+                    "type": "number"
+                },
+                "start_date": {
+                    "type": "string"
+                },
+                "status": {
+                    "$ref": "#/definitions/order.ModerationStatus"
+                },
+                "store_link": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "type": {
+                    "$ref": "#/definitions/order.OrderType"
+                }
+            }
+        },
         "http.OrderRequest": {
             "type": "object",
             "properties": {
                 "cost": {
                     "type": "number",
                     "example": 1000
+                },
+                "deposit": {
+                    "type": "number",
+                    "example": 200
                 },
                 "description": {
                     "type": "string",
@@ -251,6 +407,15 @@ const docTemplate = `{
                 "title": {
                     "type": "string",
                     "example": "Заказ на доставку"
+                },
+                "type": {
+                    "description": "\u003c--- ЭТО ДОБАВИТЬ",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/order.OrderType"
+                        }
+                    ],
+                    "example": "personal"
                 }
             }
         },
@@ -258,12 +423,10 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "id": {
-                    "type": "integer",
-                    "example": 42
+                    "type": "integer"
                 },
                 "order_number": {
-                    "type": "string",
-                    "example": "Заказ #0123-0042"
+                    "type": "string"
                 }
             }
         },
@@ -288,6 +451,30 @@ const docTemplate = `{
                     "type": "integer"
                 }
             }
+        },
+        "order.ModerationStatus": {
+            "type": "string",
+            "enum": [
+                "PENDING",
+                "APPROVED",
+                "REJECTED"
+            ],
+            "x-enum-varnames": [
+                "StatusPending",
+                "StatusApproved",
+                "StatusRejected"
+            ]
+        },
+        "order.OrderType": {
+            "type": "string",
+            "enum": [
+                "personal",
+                "store"
+            ],
+            "x-enum-varnames": [
+                "OrderTypePersonal",
+                "OrderTypeStore"
+            ]
         }
     }
 }`

@@ -49,3 +49,7 @@ func (s *Service) SetStatus(ctx context.Context, id int, status ModerationStatus
 func generateFlightNumber(now time.Time, tgID int64) string {
 	return fmt.Sprintf("Рейс #%04d-%04d", time.Now().Unix()%10000, tgID%10000)
 }
+
+func (s *Service) GetAllFlights(ctx context.Context) ([]*Flight, error) {
+	return s.repo.GetAllFlights(ctx)
+}

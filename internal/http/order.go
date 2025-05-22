@@ -102,6 +102,22 @@ func (deps OrderDeps) createOrderHandler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
+	switch body.Type {
+	case order.OrderTypeStore:
+		if body.Cost == nil || body.StoreLink == nil {
+			http.Error(w, "Для типа store обязательны cost и store_link", http.StatusBadRequest)
+			return
+		}
+	case order.OrderTypePersonal:
+		if body.Deposit == nil {
+			http.Error(w, "Для типа personal обязателен deposit", http.StatusBadRequest)
+			return
+		}
+	default:
+		http.Error(w, "Неверный тип заказа", http.StatusBadRequest)
+		return
+	}
+
 	o := &order.Order{
 		OrderNumber:       fmt.Sprintf("Заказ #%04d-%04d", time.Now().Unix()%10000, user.ID%10000),
 		PublisherUsername: user.TgUsername,
@@ -112,12 +128,13 @@ func (deps OrderDeps) createOrderHandler(w http.ResponseWriter, r *http.Request)
 		Description:       body.Description,
 		StoreLink:         body.StoreLink,
 		Cost:              body.Cost,
+		Deposit:           body.Deposit,
 		Reward:            body.Reward,
 		OriginCity:        body.OriginCity,
 		DestinationCity:   body.DestinationCity,
 		StartDate:         start,
 		EndDate:           end,
-		Type:              order.OrderTypePersonal,
+		Type:              body.Type,
 		Status:            order.StatusPending,
 	}
 
@@ -138,9 +155,63 @@ func (deps OrderDeps) createOrderHandler(w http.ResponseWriter, r *http.Request)
 	})
 }
 
-// RegisterRoutes регистрирует роуты
+// @Summary Получить все заказы
+// @Tags orders
+// @Produce json
+// @Success 200 {array} OrderFullResponse
+// @Failure 500 {string} string "Ошибка сервера при получении заказов"
+// @Router /orders [get]
+func (deps OrderDeps) getAllOrdersHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Метод не поддерживается", http.StatusMethodNotAllowed)
+		return
+	}
+
+	ctx := r.Context()
+	orders, err := deps.OrderService.GetAllOrders(ctx)
+	if err != nil {
+		http.Error(w, "Ошибка при получении заказов", http.StatusInternalServerError)
+		return
+	}
+
+	var response []OrderFullResponse
+	for _, o := range orders {
+		response = append(response, OrderFullResponse{
+			ID:                o.ID,
+			OrderNumber:       o.OrderNumber,
+			PublisherUsername: o.PublisherUsername,
+			PublisherTgID:     o.PublisherTgID,
+			PublishedAt:       o.PublishedAt,
+			OriginCity:        o.OriginCity,
+			DestinationCity:   o.DestinationCity,
+			StartDate:         o.StartDate,
+			EndDate:           o.EndDate,
+			Title:             o.Title,
+			Description:       o.Description,
+			StoreLink:         o.StoreLink,
+			Reward:            o.Reward,
+			Deposit:           o.Deposit,
+			Cost:              o.Cost,
+			MediaURLs:         o.MediaURLs,
+			Type:              o.Type,
+			Status:            o.Status,
+		})
+	}
+
+	json.NewEncoder(w).Encode(response)
+}
+
 func RegisterRoutes(mux *http.ServeMux, deps OrderDeps) {
-	mux.HandleFunc("/orders", WithAuth(deps.createOrderHandler))
+	mux.HandleFunc("/orders", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodPost:
+			WithAuth(deps.createOrderHandler)(w, r)
+		case http.MethodGet:
+			deps.getAllOrdersHandler(w, r)
+		default:
+			http.Error(w, "Метод не поддерживается", http.StatusMethodNotAllowed)
+		}
+	})
 	mux.HandleFunc("/auth/telegram", deps.telegramAuthHandler)
 }
 

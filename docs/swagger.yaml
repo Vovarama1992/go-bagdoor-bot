@@ -1,4 +1,29 @@
 definitions:
+  http.FlightFullResponse:
+    properties:
+      description:
+        type: string
+      destination:
+        type: string
+      flight_date:
+        type: string
+      flight_number:
+        type: string
+      id:
+        type: integer
+      map_url:
+        type: string
+      origin:
+        type: string
+      published_at:
+        type: string
+      publisher_tg_id:
+        type: integer
+      publisher_username:
+        type: string
+      status:
+        type: string
+    type: object
   http.FlightRequest:
     properties:
       description:
@@ -24,10 +49,54 @@ definitions:
         example: 17
         type: integer
     type: object
+  http.OrderFullResponse:
+    properties:
+      cost:
+        type: number
+      deposit:
+        type: number
+      description:
+        type: string
+      destination_city:
+        type: string
+      end_date:
+        type: string
+      id:
+        type: integer
+      media_urls:
+        items:
+          type: string
+        type: array
+      order_number:
+        type: string
+      origin_city:
+        type: string
+      published_at:
+        type: string
+      publisher_tg_id:
+        type: integer
+      publisher_username:
+        type: string
+      reward:
+        type: number
+      start_date:
+        type: string
+      status:
+        $ref: '#/definitions/order.ModerationStatus'
+      store_link:
+        type: string
+      title:
+        type: string
+      type:
+        $ref: '#/definitions/order.OrderType'
+    type: object
   http.OrderRequest:
     properties:
       cost:
         example: 1000
+        type: number
+      deposit:
+        example: 200
         type: number
       description:
         example: Нужно привезти из Москвы в СПб
@@ -55,14 +124,17 @@ definitions:
       title:
         example: Заказ на доставку
         type: string
+      type:
+        allOf:
+        - $ref: '#/definitions/order.OrderType'
+        description: <--- ЭТО ДОБАВИТЬ
+        example: personal
     type: object
   http.OrderResponse:
     properties:
       id:
-        example: 42
         type: integer
       order_number:
-        example: 'Заказ #0123-0042'
         type: string
     type: object
   http.TelegramAuthRequest:
@@ -80,6 +152,24 @@ definitions:
       tg_id:
         type: integer
     type: object
+  order.ModerationStatus:
+    enum:
+    - PENDING
+    - APPROVED
+    - REJECTED
+    type: string
+    x-enum-varnames:
+    - StatusPending
+    - StatusApproved
+    - StatusRejected
+  order.OrderType:
+    enum:
+    - personal
+    - store
+    type: string
+    x-enum-varnames:
+    - OrderTypePersonal
+    - OrderTypeStore
 info:
   contact: {}
 paths:
@@ -117,6 +207,23 @@ paths:
       tags:
       - auth
   /flights:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/http.FlightFullResponse'
+            type: array
+        "500":
+          description: Ошибка при получении рейсов
+          schema:
+            type: string
+      summary: Получить все рейсы
+      tags:
+      - flights
     post:
       consumes:
       - application/json
@@ -150,6 +257,23 @@ paths:
       tags:
       - flights
   /orders:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/http.OrderFullResponse'
+            type: array
+        "500":
+          description: Ошибка сервера при получении заказов
+          schema:
+            type: string
+      summary: Получить все заказы
+      tags:
+      - orders
     post:
       consumes:
       - application/json

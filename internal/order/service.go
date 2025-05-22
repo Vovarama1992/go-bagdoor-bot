@@ -30,3 +30,7 @@ func (s *Service) AddMediaURLs(ctx context.Context, orderID int, urls []string) 
 func (s *Service) UpdateModerationStatus(ctx context.Context, orderID int, status ModerationStatus) error {
 	return s.repo.UpdateModerationStatus(ctx, orderID, status)
 }
+
+func (s *Service) GetAllOrders(ctx context.Context) ([]*Order, error) {
+	return s.repo.GetAllOrders(ctx)
+}

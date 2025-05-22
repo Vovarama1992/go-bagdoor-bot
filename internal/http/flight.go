@@ -77,6 +77,55 @@ func (d FlightDeps) createFlightHandler(w http.ResponseWriter, r *http.Request) 
 	})
 }
 
+// @Summary Получить все рейсы
+// @Tags flights
+// @Produce json
+// @Success 200 {array} FlightFullResponse
+// @Failure 500 {string} string "Ошибка при получении рейсов"
+// @Router /flights [get]
+func (d FlightDeps) getAllFlightsHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Метод не поддерживается", http.StatusMethodNotAllowed)
+		return
+	}
+
+	ctx := r.Context()
+	flights, err := d.FlightService.GetAllFlights(ctx)
+	if err != nil {
+		http.Error(w, "Ошибка при получении рейсов", http.StatusInternalServerError)
+		return
+	}
+
+	var resp []FlightFullResponse
+	for _, f := range flights {
+		resp = append(resp, FlightFullResponse{
+			ID:                f.ID,
+			FlightNumber:      f.FlightNumber,
+			PublisherUsername: f.PublisherUsername,
+			PublisherTgID:     f.PublisherTgID,
+			PublishedAt:       f.PublishedAt,
+			FlightDate:        f.FlightDate,
+			Description:       f.Description,
+			Origin:            f.Origin,
+			Destination:       f.Destination,
+			Status:            string(f.Status),
+
+			MapURL: f.MapURL,
+		})
+	}
+
+	json.NewEncoder(w).Encode(resp)
+}
+
 func RegisterFlightRoutes(mux *http.ServeMux, deps FlightDeps) {
-	mux.HandleFunc("/flights", WithAuth(deps.createFlightHandler))
+	mux.HandleFunc("/flights", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodPost:
+			WithAuth(deps.createFlightHandler)(w, r)
+		case http.MethodGet:
+			deps.getAllFlightsHandler(w, r)
+		default:
+			http.Error(w, "Метод не поддерживается", http.StatusMethodNotAllowed)
+		}
+	})
 }
