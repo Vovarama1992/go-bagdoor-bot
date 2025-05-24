@@ -21,17 +21,40 @@ type UserResponse struct {
 // --- Orders ---
 
 type OrderRequest struct {
-	Title           string          `json:"title" example:"Заказ на доставку"`
-	Description     string          `json:"description" example:"Нужно привезти из Москвы в СПб"`
-	StoreLink       *string         `json:"store_link,omitempty" example:"https://store.com/item/123"`
-	Cost            *float64        `json:"cost,omitempty" example:"1000"`
-	Deposit         *float64        `json:"deposit,omitempty" example:"200"`
-	Reward          float64         `json:"reward" example:"100"`
-	OriginCity      string          `json:"origin_city" example:"Москва"`
-	DestinationCity string          `json:"destination_city" example:"Санкт-Петербург"`
-	StartDate       string          `json:"start_date" example:"01/06/25"` // dd/mm/yy
-	EndDate         string          `json:"end_date" example:"05/06/25"`   // dd/mm/yy
-	Type            order.OrderType `json:"type" example:"personal"`       // <--- ЭТО ДОБАВИТЬ
+	// Заголовок заказа
+	Title string `json:"title" example:"Заказ на доставку"`
+
+	// Описание задачи
+	Description string `json:"description" example:"Нужно привезти документы из Москвы в Санкт-Петербург"`
+
+	// Ссылка на магазин (только для типа store)
+	StoreLink *string `json:"store_link,omitempty" example:"https://store.com/item/123"`
+
+	// Стоимость товаров (только для типа store)
+	Cost *float64 `json:"cost,omitempty" example:"1500"`
+
+	// Депозит (только для типа personal)
+	Deposit *float64 `json:"deposit,omitempty" example:"500"`
+
+	// Вознаграждение исполнителю
+	Reward float64 `json:"reward" example:"100"`
+
+	// Город отправления
+	OriginCity string `json:"origin_city" example:"Москва"`
+
+	// Город назначения
+	DestinationCity string `json:"destination_city" example:"Санкт-Петербург"`
+
+	// Начало периода
+	StartDate string `json:"start_date" example:"01/06/25"` // формат dd/mm/yy
+
+	// Конец периода
+	EndDate string `json:"end_date" example:"05/06/25"` // формат dd/mm/yy
+
+	// Тип заказа: "personal" или "store"
+	// 🔷 Для "store" обязательны поля `cost` и `store_link`
+	// 🔷 Для "personal" обязателен `deposit`
+	Type order.OrderType `json:"type" example:"personal"`
 }
 
 type OrderResponse struct {

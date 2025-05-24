@@ -2,9 +2,13 @@ package http
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
+	"os"
 	"strings"
 	"time"
+
+	telegram "github.com/Vovarama1992/go-bagdoor-bot/internal/notifier"
 
 	"github.com/Vovarama1992/go-bagdoor-bot/internal/auth"
 )
@@ -68,6 +72,11 @@ func (d FlightDeps) createFlightHandler(w http.ResponseWriter, r *http.Request) 
 	if err != nil {
 		http.Error(w, "Не удалось создать рейс", http.StatusInternalServerError)
 		return
+	}
+
+	notifier := telegram.NewNotifier(os.Getenv("TELEGRAM_BOT_TOKEN"))
+	if err := notifier.NotifyNewFlight(tgID, f); err != nil {
+		log.Printf("Ошибка отправки уведомления в Telegram: %v", err)
 	}
 
 	w.WriteHeader(http.StatusCreated)

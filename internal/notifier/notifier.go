@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/Vovarama1992/go-bagdoor-bot/internal/flight"
 	"github.com/Vovarama1992/go-bagdoor-bot/internal/order"
 )
 
@@ -42,6 +43,44 @@ func (n *Notifier) NotifyNewOrder(tgID int64, o *order.Order) error {
 		formatNullablePrice(o.Cost),
 		o.Reward,
 		o.ID,
+	)
+
+	body := map[string]interface{}{
+		"chat_id": tgID,
+		"text":    msg,
+	}
+
+	data, _ := json.Marshal(body)
+	resp, err := http.Post(url, "application/json", bytes.NewBuffer(data))
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode >= 300 {
+		return fmt.Errorf("telegram error: %d", resp.StatusCode)
+	}
+
+	return nil
+}
+
+func (n *Notifier) NotifyNewFlight(tgID int64, f *flight.Flight) error {
+	url := fmt.Sprintf("https://api.telegram.org/bot%s/sendMessage", n.BotToken)
+
+	msg := fmt.Sprintf(`✈️ %s
+Описание: %s
+Маршрут: %s → %s
+Дата: %s
+
+❗Ваш рейс в одном шаге от публикации. Прикрепите маршрутную карту в формате PDF.
+
+/setflightid %d`,
+		f.FlightNumber,
+		f.Description,
+		f.Origin,
+		f.Destination,
+		f.FlightDate.Format("02.01.2006"),
+		f.ID,
 	)
 
 	body := map[string]interface{}{

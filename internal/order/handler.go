@@ -75,7 +75,7 @@ func HandlePhotoUpload(s *Service, bot *tele.Bot, uploader *storage.S3Uploader) 
 			return c.Send("❌ Не удалось прочитать файл")
 		}
 
-		s3url, err := uploader.Upload(orderID, fileName, content)
+		s3url, err := uploader.UploadOrderMedia(orderID, fileName, content)
 		if err != nil {
 			log.Printf("Ошибка загрузки в S3: %v", err)
 			return c.Send("❌ Не удалось загрузить фото")

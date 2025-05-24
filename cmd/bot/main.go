@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/Vovarama1992/go-bagdoor-bot/internal/db"
+	"github.com/Vovarama1992/go-bagdoor-bot/internal/flight"
 	"github.com/Vovarama1992/go-bagdoor-bot/internal/order"
 	"github.com/Vovarama1992/go-bagdoor-bot/internal/storage"
 	"github.com/Vovarama1992/go-bagdoor-bot/internal/user"
@@ -66,7 +67,9 @@ func main() {
 	userService := user.NewService(userRepo)
 
 	orderRepo := order.NewPostgresRepository(pool)
+	flightRepo := flight.NewPostgresRepository(pool)
 	orderService := order.NewService(orderRepo, userRepo)
+	flightService := flight.NewService(flightRepo)
 
 	s3Uploader := storage.NewS3Uploader()
 
@@ -78,6 +81,8 @@ func main() {
 	// Хендлеры заказов
 	bot.Handle("/setorderid", order.HandleSetOrderID())
 	bot.Handle(tele.OnPhoto, order.HandlePhotoUpload(orderService, bot, s3Uploader))
+	bot.Handle("/setflightid", flight.HandleSetFlightID())
+	bot.Handle(tele.OnDocument, flight.HandlePdfUpload(flightService, bot, s3Uploader))
 
 	// Отладка: получить ID канала
 	bot.Handle("/getchannelid", func(c tele.Context) error {

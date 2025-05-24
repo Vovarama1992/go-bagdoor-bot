@@ -17,9 +17,9 @@ import (
 )
 
 type S3Uploader struct {
-	Client   *s3.Client
-	Bucket   string
-	Endpoint string
+	Client    *s3.Client
+	Bucket    string
+	PublicURL string
 }
 
 func NewS3Uploader() *S3Uploader {
@@ -46,14 +46,14 @@ func NewS3Uploader() *S3Uploader {
 	client := s3.NewFromConfig(cfg)
 
 	return &S3Uploader{
-		Client:   client,
-		Bucket:   bucket,
-		Endpoint: endpoint,
+		Client:    client,
+		Bucket:    bucket,
+		PublicURL: fmt.Sprintf("%s/%s", endpoint, bucket),
 	}
 }
 
-func (u *S3Uploader) Upload(orderID int, fileName string, content []byte) (string, error) {
-	key := fmt.Sprintf("orders/%d/%s", orderID, fileName)
+func (u *S3Uploader) UploadOrderMedia(orderID int, fileName string, content []byte) (string, error) {
+	key := fmt.Sprintf("bot/orders/%d/%s", orderID, fileName)
 	contentType := mime.TypeByExtension(filepath.Ext(fileName))
 
 	_, err := u.Client.PutObject(context.TODO(), &s3.PutObjectInput{
@@ -67,6 +67,25 @@ func (u *S3Uploader) Upload(orderID int, fileName string, content []byte) (strin
 		return "", err
 	}
 
-	url := fmt.Sprintf("%s/%s/%s", u.Endpoint, u.Bucket, key)
+	url := fmt.Sprintf("%s/%s", u.PublicURL, key)
+	return url, nil
+}
+
+func (u *S3Uploader) UploadFlightMap(flightID int, fileName string, content []byte) (string, error) {
+	key := fmt.Sprintf("bot/flights/%d/%s", flightID, fileName)
+	contentType := mime.TypeByExtension(filepath.Ext(fileName))
+
+	_, err := u.Client.PutObject(context.TODO(), &s3.PutObjectInput{
+		Bucket:      aws.String(u.Bucket),
+		Key:         aws.String(key),
+		Body:        bytes.NewReader(content),
+		ContentType: aws.String(contentType),
+		ACL:         s3types.ObjectCannedACLPublicRead,
+	})
+	if err != nil {
+		return "", err
+	}
+
+	url := fmt.Sprintf("%s/%s", u.PublicURL, key)
 	return url, nil
 }
