@@ -142,7 +142,7 @@ func subscribeMarkup() *tele.ReplyMarkup {
 // Функция для создания кнопки с ссылкой на мини-приложение
 func openAppMarkup() *tele.ReplyMarkup {
 	markup := &tele.ReplyMarkup{}
-	btn := markup.URL("Открыть", "https://t.me/bagdoorapp_bot/app")
+	btn := markup.URL("Открыть", "https://tgbot.bagdoor.io")
 	markup.Reply(markup.Row(btn))
 	return markup
 }
