@@ -138,14 +138,6 @@ func isSubscribed(c tele.Context) bool {
 	return true
 }
 
-// Функция для создания разметки кнопок для подписки
-func subscribeMarkup() *tele.ReplyMarkup {
-	markup := &tele.ReplyMarkup{}
-	btn := markup.Data("✅ Я подписался", "subscribed")
-	markup.Inline(markup.Row(btn))
-	return markup
-}
-
 // Функция для создания кнопки с ссылкой на мини-приложение
 func openAppMarkup() *tele.ReplyMarkup {
 	markup := &tele.ReplyMarkup{}

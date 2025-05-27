@@ -62,7 +62,12 @@ func main() {
 	s3Uploader := storage.NewS3Uploader()
 
 	bot.Handle("/start", user.HandleStart(userService))
-	bot.Handle(&tele.Callback{Unique: "subscribed"}, user.SubscribeHandler(userService))
+	bot.Handle(tele.OnText, func(c tele.Context) error {
+		if c.Text() == "✅ Я подписался" {
+			return user.SubscribeHandler(userService)(c)
+		}
+		return nil
+	})
 	bot.Handle(tele.OnContact, user.PhoneHandler(userService))
 
 	bot.Handle("/setorderid", botorder.HandleSetOrderID())
