@@ -1,4 +1,4 @@
-package http
+package http_flight
 
 import (
 	"encoding/json"
@@ -7,6 +7,8 @@ import (
 	"os"
 	"strings"
 	"time"
+
+	"github.com/Vovarama1992/go-bagdoor-bot/internal/server"
 
 	telegram "github.com/Vovarama1992/go-bagdoor-bot/internal/notifier"
 
@@ -126,11 +128,11 @@ func (d FlightDeps) getAllFlightsHandler(w http.ResponseWriter, r *http.Request)
 	json.NewEncoder(w).Encode(resp)
 }
 
-func RegisterFlightRoutes(mux *http.ServeMux, deps FlightDeps) {
+func RegisterRoutes(mux *http.ServeMux, deps FlightDeps) {
 	mux.HandleFunc("/flights", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodPost:
-			WithAuth(deps.createFlightHandler)(w, r)
+			server.WithAuth(deps.createFlightHandler)(w, r)
 		case http.MethodGet:
 			deps.getAllFlightsHandler(w, r)
 		default:

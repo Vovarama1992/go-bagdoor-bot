@@ -1,4 +1,4 @@
-package http
+package http_order
 
 import (
 	"encoding/json"
@@ -6,58 +6,13 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"strconv"
+
 	"time"
 
-	"github.com/Vovarama1992/go-bagdoor-bot/internal/auth"
 	telegram "github.com/Vovarama1992/go-bagdoor-bot/internal/notifier"
 	"github.com/Vovarama1992/go-bagdoor-bot/internal/order"
+	"github.com/Vovarama1992/go-bagdoor-bot/internal/server"
 )
-
-// @Summary Авторизация через Telegram
-// @Tags auth
-// @Accept json
-// @Produce json
-// @Param data body TelegramAuthRequest true "Init data от Telegram"
-// @Success 200 {object} TelegramAuthResponse
-// @Failure 400 {string} string "Bad request"
-// @Failure 401 {string} string "Invalid signature"
-// @Failure 500 {string} string "User error или Token error"
-// @Router /auth/telegram [post]
-func (deps OrderDeps) telegramAuthHandler(w http.ResponseWriter, r *http.Request) {
-	var body TelegramAuthRequest
-	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, "Bad request", http.StatusBadRequest)
-		return
-	}
-
-	data, ok := auth.ValidateTelegramInitData(body.InitData, os.Getenv("TELEGRAM_BOT_TOKEN"))
-	if !ok {
-		http.Error(w, "Invalid signature", http.StatusUnauthorized)
-		return
-	}
-
-	tgID, _ := parseInt64(data["user.id"])
-	username := data["user.username"]
-	first := data["user.first_name"]
-	last := data["user.last_name"]
-
-	ctx := r.Context()
-	if _, err := deps.UserService.FindOrCreateFromTelegram(ctx, tgID, username, first, last); err != nil {
-		http.Error(w, "User error", http.StatusInternalServerError)
-		return
-	}
-
-	token, err := auth.GenerateTokenWithTgID(tgID)
-	if err != nil {
-		http.Error(w, "Token error", http.StatusInternalServerError)
-		return
-	}
-
-	json.NewEncoder(w).Encode(TelegramAuthResponse{
-		AccessToken: token,
-	})
-}
 
 // @Summary Создать заказ
 // @Tags orders
@@ -76,7 +31,7 @@ func (deps OrderDeps) createOrderHandler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	tgID, ok := GetTgIDFromContext(r.Context())
+	tgID, ok := server.GetTgIDFromContext(r.Context())
 	if !ok {
 		http.Error(w, "tgID не найден в контексте", http.StatusUnauthorized)
 		return
@@ -205,16 +160,12 @@ func RegisterRoutes(mux *http.ServeMux, deps OrderDeps) {
 	mux.HandleFunc("/orders", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodPost:
-			WithAuth(deps.createOrderHandler)(w, r)
+			server.WithAuth(deps.createOrderHandler)(w, r)
 		case http.MethodGet:
 			deps.getAllOrdersHandler(w, r)
 		default:
 			http.Error(w, "Метод не поддерживается", http.StatusMethodNotAllowed)
 		}
 	})
-	mux.HandleFunc("/auth/telegram", deps.telegramAuthHandler)
-}
 
-func parseInt64(s string) (int64, error) {
-	return strconv.ParseInt(s, 10, 64)
 }

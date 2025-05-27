@@ -21,11 +21,18 @@ func HandleStart(s *Service) tele.HandlerFunc {
 			return c.Send("Добро пожаловать! 🔥\nРады видеть вас снова", openAppMarkup())
 		}
 
-		return c.Send(`Привет! Это бот Bagdoor⚡
+		// Создаём меню с 3 кнопками: Чат, Канал, Я подписался
+		markup := &tele.ReplyMarkup{}
+		btnChat := markup.URL("🔗 Чат", "https://t.me/+s4aQ9RU-K9JkZmNi")
+		btnChannel := markup.URL("📣 Канал", "https://t.me/bagdoor")
+		btnConfirm := markup.Text("✅ Я подписался")
+		markup.Reply(
+			markup.Row(btnChat),
+			markup.Row(btnChannel),
+			markup.Row(btnConfirm),
+		)
 
-Перед началом проверь, что ты подписался(а) на наш [чат](https://t.me/+s4aQ9RU-K9JkZmNi) и [канал](https://t.me/bagdoor) — это необходимо для продолжения.
-
-Продолжая, ты автоматически соглашаешься с Пользовательским соглашением и Политикой конфиденциальности.`, subscribeMarkup())
+		return c.Send("Привет! Это бот Bagdoor⚡\n\nПеред началом подпишись на чат и канал, а затем нажми '✅ Я подписался'", markup)
 	}
 }
 
@@ -133,9 +140,9 @@ func isSubscribed(c tele.Context) bool {
 
 // Функция для создания разметки кнопок для подписки
 func subscribeMarkup() *tele.ReplyMarkup {
-	btnSubscribed := tele.Btn{Text: "✅ Я подписался"}
 	markup := &tele.ReplyMarkup{}
-	markup.Reply(markup.Row(btnSubscribed))
+	btn := markup.Data("✅ Я подписался", "subscribed")
+	markup.Inline(markup.Row(btn))
 	return markup
 }
 

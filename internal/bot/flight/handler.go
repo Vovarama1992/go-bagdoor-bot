@@ -1,4 +1,4 @@
-package flight
+package bot_flight
 
 import (
 	"context"
@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Vovarama1992/go-bagdoor-bot/internal/flight"
 	"github.com/Vovarama1992/go-bagdoor-bot/internal/storage"
 	tele "gopkg.in/telebot.v3"
 )
@@ -38,7 +39,7 @@ func HandleSetFlightID() tele.HandlerFunc {
 	}
 }
 
-func HandlePdfUpload(service *Service, bot *tele.Bot, uploader *storage.S3Uploader) tele.HandlerFunc {
+func HandlePdfUpload(service *flight.Service, bot *tele.Bot, uploader *storage.S3Uploader) tele.HandlerFunc {
 	return func(c tele.Context) error {
 		tgID := c.Sender().ID
 		flightID, ok := awaitingMap[tgID]
@@ -97,7 +98,7 @@ func HandlePdfUpload(service *Service, bot *tele.Bot, uploader *storage.S3Upload
 			return c.Send("❌ Ошибка сохранения карты")
 		}
 
-		if err := service.SetStatus(ctx, flightID, StatusApproved); err != nil {
+		if err := service.SetStatus(ctx, flightID, flight.StatusApproved); err != nil {
 			log.Printf("SetStatus error: %v", err)
 		}
 

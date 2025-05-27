@@ -6,12 +6,16 @@ import (
 	"os"
 
 	_ "github.com/Vovarama1992/go-bagdoor-bot/docs"
+
 	"github.com/Vovarama1992/go-bagdoor-bot/internal/db"
 	"github.com/Vovarama1992/go-bagdoor-bot/internal/flight"
-	httpPkg "github.com/Vovarama1992/go-bagdoor-bot/internal/http"
+	httpauth "github.com/Vovarama1992/go-bagdoor-bot/internal/http/auth"
+	httpflight "github.com/Vovarama1992/go-bagdoor-bot/internal/http/flight"
+	httporder "github.com/Vovarama1992/go-bagdoor-bot/internal/http/order"
 	"github.com/Vovarama1992/go-bagdoor-bot/internal/order"
 	"github.com/Vovarama1992/go-bagdoor-bot/internal/storage"
 	"github.com/Vovarama1992/go-bagdoor-bot/internal/user"
+
 	"github.com/joho/godotenv"
 	httpSwagger "github.com/swaggo/http-swagger"
 )
@@ -31,7 +35,6 @@ func main() {
 		log.Fatalf("Ошибка подключения к БД: %v", err)
 	}
 
-	// Репозитории и сервисы
 	userRepo := user.NewPostgresRepository(pool)
 	userService := user.NewService(userRepo)
 
@@ -43,22 +46,22 @@ func main() {
 
 	s3 := storage.NewS3Uploader()
 
-	// Роутинг
 	mux := http.NewServeMux()
 
-	orderDeps := httpPkg.OrderDeps{
+	httpauth.RegisterRoutes(mux, httpauth.AuthDeps{
+		UserService: userService,
+	})
+
+	httporder.RegisterRoutes(mux, httporder.OrderDeps{
 		UserService:  userService,
 		OrderService: orderService,
 		Uploader:     s3,
-	}
+	})
 
-	flightDeps := httpPkg.FlightDeps{
+	httpflight.RegisterRoutes(mux, httpflight.FlightDeps{
 		UserService:   userService,
 		FlightService: flightService,
-	}
-
-	httpPkg.RegisterRoutes(mux, orderDeps)
-	httpPkg.RegisterFlightRoutes(mux, flightDeps)
+	})
 
 	mux.Handle("/swagger/", httpSwagger.WrapHandler)
 

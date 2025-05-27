@@ -1,4 +1,4 @@
-package order
+package bot_order
 
 import (
 	"context"
@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Vovarama1992/go-bagdoor-bot/internal/order"
 	"github.com/Vovarama1992/go-bagdoor-bot/internal/storage"
 	tele "gopkg.in/telebot.v3"
 )
@@ -36,7 +37,7 @@ func HandleSetOrderID() tele.HandlerFunc {
 		return c.Send(fmt.Sprintf("Готово. Прикрепите фото к заказу #%d", orderID))
 	}
 }
-func HandlePhotoUpload(s *Service, bot *tele.Bot, uploader *storage.S3Uploader) tele.HandlerFunc {
+func HandlePhotoUpload(s *order.Service, bot *tele.Bot, uploader *storage.S3Uploader) tele.HandlerFunc {
 	return func(c tele.Context) error {
 		tgID := c.Sender().ID
 		orderID, ok := awaitingPhotos[tgID]
@@ -105,11 +106,11 @@ func HandlePhotoUpload(s *Service, bot *tele.Bot, uploader *storage.S3Uploader) 
 			return c.Send("Ошибка при сохранении фото")
 		}
 
-		if err := s.UpdateModerationStatus(ctx, orderID, StatusApproved); err != nil {
+		if err := s.UpdateModerationStatus(ctx, orderID, order.StatusApproved); err != nil {
 			log.Printf("Ошибка при обновлении статуса: %v", err)
 		}
 
-		order, err := s.repo.GetOrderByID(ctx, orderID)
+		order, err := s.Repo.GetOrderByID(ctx, orderID)
 		if err != nil {
 			log.Printf("Ошибка получения заказа: %v", err)
 			return c.Send("Ошибка при формировании подтверждения")
