@@ -150,8 +150,13 @@ func isSubscribed(c tele.Context) bool {
 
 func openAppMarkup() *tele.ReplyMarkup {
 	markup := &tele.ReplyMarkup{}
-	btn := markup.URL("Открыть", "https://tgbot.bagdoor.io")
-	markup.Reply(markup.Row(btn))
+	btn := tele.Btn{
+		Text: "Открыть",
+		WebApp: &tele.WebApp{
+			URL: "https://tgbot.bagdoor.io",
+		},
+	}
+	markup.Inline(markup.Row(btn))
 	return markup
 }
 
