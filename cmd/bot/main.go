@@ -62,7 +62,12 @@ func main() {
 	s3Uploader := storage.NewS3Uploader()
 
 	bot.Handle("/start", user.HandleStart(userService))
-	bot.Handle(&tele.Callback{Data: "confirm_sub"}, user.SubscribeHandler(userService))
+	bot.Handle(tele.OnCallback, func(c tele.Context) error {
+		if c.Callback() != nil && c.Callback().Data == "confirm_sub" {
+			return user.SubscribeHandler(userService)(c)
+		}
+		return nil
+	})
 	bot.Handle(tele.OnContact, user.PhoneHandler(userService))
 
 	bot.Handle("/setorderid", botorder.HandleSetOrderID())
