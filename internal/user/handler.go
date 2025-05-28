@@ -20,6 +20,7 @@ func HandleStart(s *Service) tele.HandlerFunc {
 		from := c.Sender()
 		user, err := s.GetByTgID(ctx, from.ID)
 		if err == nil && user != nil {
+			log.Printf("👋 Повторный вход: пользователь %d уже зарегистрирован", from.ID)
 			return c.Send("Добро пожаловать! 🔥\nРады видеть вас снова", openAppMarkup())
 		}
 
@@ -42,18 +43,17 @@ func HandleStart(s *Service) tele.HandlerFunc {
 	}
 }
 
-// Хендлер для проверки подписки и запроса номера телефона
 func SubscribeHandler(s *Service) tele.HandlerFunc {
 	return func(c tele.Context) error {
 		log.Printf("Нажата кнопка '✅ Я подписался' от пользователя %d", c.Sender().ID)
 		_ = c.Respond()
 
 		if !isSubscribed(c) {
-			log.Printf("Пользователь %d не подписан", c.Sender().ID)
+			log.Printf("❌ Пользователь %d не подписан", c.Sender().ID)
 			return c.Send("Подписки не найдены! Пожалуйста, подпишитесь на чат и канал.")
 		}
 
-		log.Printf("Пользователь %d успешно прошёл проверку подписки", c.Sender().ID)
+		log.Printf("✅ Пользователь %d успешно прошёл проверку подписки", c.Sender().ID)
 
 		return c.Send(
 			"Теперь, чтобы завершить регистрацию, отправь свой номер телефона.",
@@ -61,6 +61,7 @@ func SubscribeHandler(s *Service) tele.HandlerFunc {
 		)
 	}
 }
+
 func PhoneHandler(s *Service) tele.HandlerFunc {
 	return func(c tele.Context) error {
 		contact := c.Message().Contact
@@ -81,20 +82,21 @@ func PhoneHandler(s *Service) tele.HandlerFunc {
 		}
 
 		if err := s.RegisterUser(ctx, newUser); err != nil {
-			log.Printf("Ошибка при регистрации: %v", err)
+			log.Printf("❌ Ошибка при регистрации: %v", err)
 			return c.Send("Ошибка при регистрации.")
 		}
 
+		log.Printf("✅ Пользователь %d успешно зарегистрирован", c.Sender().ID)
+
 		opts := &tele.SendOptions{ReplyMarkup: &tele.ReplyMarkup{RemoveKeyboard: true}}
 
-		// Убираем клавиатуру и приветствуем
-		if err := c.Send("✅", opts); err != nil {
-			return err
-		}
+		_ = c.Send("✅", opts)
+
+		log.Printf("➡️ Отправляем приветствие и кнопку на миниаппу пользователю %d", c.Sender().ID)
 
 		return c.Send(
 			"Добро пожаловать! 🔥\nТеперь вы можете пользоваться ботом Bagdoor: размещать рейсы, заказы и совершать безопасные сделки. Удачи!",
-			opts,
+			openAppMarkup(),
 		)
 	}
 }
@@ -103,15 +105,14 @@ func isSubscribed(c tele.Context) bool {
 	bot := c.Bot()
 	user := c.Sender()
 
-	chatID := os.Getenv("BAGDOOR_CHAT_ID")       // группа
-	channelID := os.Getenv("BAGDOOR_CHANNEL_ID") // канал
+	chatID := os.Getenv("BAGDOOR_CHAT_ID")
+	channelID := os.Getenv("BAGDOOR_CHANNEL_ID")
 
 	if chatID == "" || channelID == "" {
-		log.Println("Не заданы BAGDOOR_CHAT_ID или BAGDOOR_CHANNEL_ID в .env")
+		log.Println("❗ Не заданы BAGDOOR_CHAT_ID или BAGDOOR_CHANNEL_ID в .env")
 		return false
 	}
 
-	// Проверка канала
 	channelInt, err := strconv.ParseInt(channelID, 10, 64)
 	if err != nil {
 		log.Printf("Ошибка парсинга BAGDOOR_CHANNEL_ID: %v", err)
@@ -128,7 +129,6 @@ func isSubscribed(c tele.Context) bool {
 		return false
 	}
 
-	// Проверка чата
 	chatInt, err := strconv.ParseInt(chatID, 10, 64)
 	if err != nil {
 		log.Printf("Ошибка парсинга BAGDOOR_CHAT_ID: %v", err)
@@ -148,7 +148,6 @@ func isSubscribed(c tele.Context) bool {
 	return true
 }
 
-// Функция для создания кнопки с ссылкой на мини-приложение
 func openAppMarkup() *tele.ReplyMarkup {
 	markup := &tele.ReplyMarkup{}
 	btn := markup.URL("Открыть", "https://tgbot.bagdoor.io")
@@ -156,7 +155,6 @@ func openAppMarkup() *tele.ReplyMarkup {
 	return markup
 }
 
-// Функция для кнопки отправки номера телефона
 func phoneMarkup() *tele.ReplyMarkup {
 	btnPhone := tele.Btn{Contact: true, Text: "📱 Отправить номер"}
 
