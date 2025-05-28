@@ -21,6 +21,11 @@ func HandleStart(s *Service) tele.HandlerFunc {
 			return c.Send("Добро пожаловать! 🔥\nРады видеть вас снова", openAppMarkup())
 		}
 
+		// Удалить старую клавиатуру (если была)
+		_ = c.Send("...", &tele.SendOptions{
+			ReplyMarkup: &tele.ReplyMarkup{RemoveKeyboard: true},
+		})
+
 		// Инлайн-кнопки
 		markup := &tele.ReplyMarkup{}
 		btnChat := markup.URL("🔗 Чат", "https://t.me/+s4aQ9RU-K9JkZmNi")
