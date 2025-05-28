@@ -1,5 +1,8 @@
 #!/bin/bash
 
+echo "📥 Обновление кода из git..."
+git pull origin master || { echo "❌ git pull не удался"; exit 1; }
+
 echo "⛔ Остановка и удаление старых контейнеров и volume..."
 docker compose down -v
 
