@@ -21,14 +21,14 @@ func HandleStart(s *Service) tele.HandlerFunc {
 			return c.Send("Добро пожаловать! 🔥\nРады видеть вас снова", openAppMarkup())
 		}
 
-		// Создаём меню с 3 кнопками: Чат, Канал, Я подписался
+		// Инлайн-кнопки
 		markup := &tele.ReplyMarkup{}
 		btnChat := markup.URL("🔗 Чат", "https://t.me/+s4aQ9RU-K9JkZmNi")
 		btnChannel := markup.URL("📣 Канал", "https://t.me/bagdoor")
-		btnConfirm := markup.Text("✅ Я подписался")
-		markup.Reply(
-			markup.Row(btnChat),
-			markup.Row(btnChannel),
+		btnConfirm := markup.Data("✅ Я подписался", "confirm_sub")
+
+		markup.Inline(
+			markup.Row(btnChat, btnChannel),
 			markup.Row(btnConfirm),
 		)
 
@@ -39,12 +39,13 @@ func HandleStart(s *Service) tele.HandlerFunc {
 // Хендлер для проверки подписки и запроса номера телефона
 func SubscribeHandler(s *Service) tele.HandlerFunc {
 	return func(c tele.Context) error {
-		// Проверка, подписан ли пользователь на чат и канал
+		// 👇 Снимает "залипание" кнопки
+		_ = c.Respond()
+
 		if !isSubscribed(c) {
 			return c.Send("Подписки не найдены! Пожалуйста, подпишитесь на чат и канал.")
 		}
 
-		// Отправляем кнопку для получения номера телефона
 		return c.Send(
 			"Теперь, чтобы завершить регистрацию, отправь свой номер телефона.",
 			&tele.SendOptions{ReplyMarkup: phoneMarkup()},
