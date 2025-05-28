@@ -10,6 +10,8 @@ import (
 	tele "gopkg.in/telebot.v3"
 )
 
+var BtnConfirmSub = &tele.Btn{Unique: "confirm_sub"}
+
 func HandleStart(s *Service) tele.HandlerFunc {
 	return func(c tele.Context) error {
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -21,7 +23,6 @@ func HandleStart(s *Service) tele.HandlerFunc {
 			return c.Send("Добро пожаловать! 🔥\nРады видеть вас снова", openAppMarkup())
 		}
 
-		// Удалить старую клавиатуру (если была)
 		_ = c.Send("...", &tele.SendOptions{
 			ReplyMarkup: &tele.ReplyMarkup{RemoveKeyboard: true},
 		})
@@ -30,7 +31,7 @@ func HandleStart(s *Service) tele.HandlerFunc {
 		markup := &tele.ReplyMarkup{}
 		btnChat := markup.URL("🔗 Чат", "https://t.me/+s4aQ9RU-K9JkZmNi")
 		btnChannel := markup.URL("📣 Канал", "https://t.me/bagdoor")
-		btnConfirm := markup.Data("✅ Я подписался", "confirm_sub")
+		btnConfirm := markup.Data("✅ Я подписался", BtnConfirmSub.Unique)
 
 		markup.Inline(
 			markup.Row(btnChat, btnChannel),
@@ -44,12 +45,15 @@ func HandleStart(s *Service) tele.HandlerFunc {
 // Хендлер для проверки подписки и запроса номера телефона
 func SubscribeHandler(s *Service) tele.HandlerFunc {
 	return func(c tele.Context) error {
-		// 👇 Снимает "залипание" кнопки
+		log.Printf("Нажата кнопка '✅ Я подписался' от пользователя %d", c.Sender().ID)
 		_ = c.Respond()
 
 		if !isSubscribed(c) {
+			log.Printf("Пользователь %d не подписан", c.Sender().ID)
 			return c.Send("Подписки не найдены! Пожалуйста, подпишитесь на чат и канал.")
 		}
+
+		log.Printf("Пользователь %d успешно прошёл проверку подписки", c.Sender().ID)
 
 		return c.Send(
 			"Теперь, чтобы завершить регистрацию, отправь свой номер телефона.",
