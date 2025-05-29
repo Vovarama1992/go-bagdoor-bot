@@ -34,7 +34,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/http.TelegramAuthRequest"
+                            "$ref": "#/definitions/http_auth.TelegramAuthRequest"
                         }
                     }
                 ],
@@ -42,7 +42,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/http.TelegramAuthResponse"
+                            "$ref": "#/definitions/http_auth.TelegramAuthResponse"
                         }
                     },
                     "400": {
@@ -81,7 +81,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/http.FlightFullResponse"
+                                "$ref": "#/definitions/http_flight.FlightFullResponse"
                             }
                         }
                     },
@@ -111,7 +111,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/http.FlightRequest"
+                            "$ref": "#/definitions/http_flight.FlightRequest"
                         }
                     }
                 ],
@@ -119,7 +119,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/http.FlightResponse"
+                            "$ref": "#/definitions/http_flight.FlightResponse"
                         }
                     },
                     "400": {
@@ -143,6 +143,34 @@ const docTemplate = `{
                 }
             }
         },
+        "/flights/moderated": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "flights"
+                ],
+                "summary": "Получить только отмодерированные рейсы",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/http_flight.FlightFullResponse"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Ошибка при получении рейсов",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/orders": {
             "get": {
                 "produces": [
@@ -158,7 +186,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/http.OrderFullResponse"
+                                "$ref": "#/definitions/http_order.OrderFullResponse"
                             }
                         }
                     },
@@ -188,7 +216,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/http.OrderRequest"
+                            "$ref": "#/definitions/http_order.OrderRequest"
                         }
                     }
                 ],
@@ -196,7 +224,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/http.OrderResponse"
+                            "$ref": "#/definitions/http_order.OrderResponse"
                         }
                     },
                     "400": {
@@ -225,10 +253,54 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/orders/approved": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "orders"
+                ],
+                "summary": "Получить только одобренные заказы",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/http_order.OrderFullResponse"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Ошибка сервера при получении заказов",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
-        "http.FlightFullResponse": {
+        "http_auth.TelegramAuthRequest": {
+            "type": "object",
+            "properties": {
+                "init_data": {
+                    "type": "string"
+                }
+            }
+        },
+        "http_auth.TelegramAuthResponse": {
+            "type": "object",
+            "properties": {
+                "access_token": {
+                    "type": "string"
+                }
+            }
+        },
+        "http_flight.FlightFullResponse": {
             "type": "object",
             "properties": {
                 "description": {
@@ -266,7 +338,7 @@ const docTemplate = `{
                 }
             }
         },
-        "http.FlightRequest": {
+        "http_flight.FlightRequest": {
             "type": "object",
             "properties": {
                 "description": {
@@ -288,7 +360,7 @@ const docTemplate = `{
                 }
             }
         },
-        "http.FlightResponse": {
+        "http_flight.FlightResponse": {
             "type": "object",
             "properties": {
                 "flight_number": {
@@ -301,7 +373,7 @@ const docTemplate = `{
                 }
             }
         },
-        "http.OrderFullResponse": {
+        "http_order.OrderFullResponse": {
             "type": "object",
             "properties": {
                 "cost": {
@@ -363,53 +435,61 @@ const docTemplate = `{
                 }
             }
         },
-        "http.OrderRequest": {
+        "http_order.OrderRequest": {
             "type": "object",
             "properties": {
                 "cost": {
+                    "description": "Стоимость товаров (только для типа store)",
                     "type": "number",
-                    "example": 1000
+                    "example": 1500
                 },
                 "deposit": {
+                    "description": "Депозит (только для типа personal)",
                     "type": "number",
-                    "example": 200
+                    "example": 500
                 },
                 "description": {
+                    "description": "Описание задачи",
                     "type": "string",
-                    "example": "Нужно привезти из Москвы в СПб"
+                    "example": "Нужно привезти документы из Москвы в Санкт-Петербург"
                 },
                 "destination_city": {
+                    "description": "Город назначения",
                     "type": "string",
                     "example": "Санкт-Петербург"
                 },
                 "end_date": {
-                    "description": "dd/mm/yy",
+                    "description": "Конец периода",
                     "type": "string",
                     "example": "05/06/25"
                 },
                 "origin_city": {
+                    "description": "Город отправления",
                     "type": "string",
                     "example": "Москва"
                 },
                 "reward": {
+                    "description": "Вознаграждение исполнителю",
                     "type": "number",
                     "example": 100
                 },
                 "start_date": {
-                    "description": "dd/mm/yy",
+                    "description": "Начало периода",
                     "type": "string",
                     "example": "01/06/25"
                 },
                 "store_link": {
+                    "description": "Ссылка на магазин (только для типа store)",
                     "type": "string",
                     "example": "https://store.com/item/123"
                 },
                 "title": {
+                    "description": "Заголовок заказа",
                     "type": "string",
                     "example": "Заказ на доставку"
                 },
                 "type": {
-                    "description": "\u003c--- ЭТО ДОБАВИТЬ",
+                    "description": "Тип заказа: \"personal\" или \"store\"\n🔷 Для \"store\" обязательны поля ` + "`" + `cost` + "`" + ` и ` + "`" + `store_link` + "`" + `\n🔷 Для \"personal\" обязателен ` + "`" + `deposit` + "`" + `",
                     "allOf": [
                         {
                             "$ref": "#/definitions/order.OrderType"
@@ -419,7 +499,7 @@ const docTemplate = `{
                 }
             }
         },
-        "http.OrderResponse": {
+        "http_order.OrderResponse": {
             "type": "object",
             "properties": {
                 "id": {
@@ -427,28 +507,6 @@ const docTemplate = `{
                 },
                 "order_number": {
                     "type": "string"
-                }
-            }
-        },
-        "http.TelegramAuthRequest": {
-            "type": "object",
-            "properties": {
-                "initData": {
-                    "description": "данные из телеги",
-                    "type": "string",
-                    "example": "..."
-                }
-            }
-        },
-        "http.TelegramAuthResponse": {
-            "type": "object",
-            "properties": {
-                "access_token": {
-                    "type": "string",
-                    "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6..."
-                },
-                "tg_id": {
-                    "type": "integer"
                 }
             }
         },

@@ -1,5 +1,15 @@
 definitions:
-  http.FlightFullResponse:
+  http_auth.TelegramAuthRequest:
+    properties:
+      init_data:
+        type: string
+    type: object
+  http_auth.TelegramAuthResponse:
+    properties:
+      access_token:
+        type: string
+    type: object
+  http_flight.FlightFullResponse:
     properties:
       description:
         type: string
@@ -24,7 +34,7 @@ definitions:
       status:
         type: string
     type: object
-  http.FlightRequest:
+  http_flight.FlightRequest:
     properties:
       description:
         example: Лечу налегке, могу взять документы.
@@ -40,7 +50,7 @@ definitions:
         example: Санкт-Петербург
         type: string
     type: object
-  http.FlightResponse:
+  http_flight.FlightResponse:
     properties:
       flight_number:
         example: 'Рейс #1234-5678'
@@ -49,7 +59,7 @@ definitions:
         example: 17
         type: integer
     type: object
-  http.OrderFullResponse:
+  http_order.OrderFullResponse:
     properties:
       cost:
         type: number
@@ -90,67 +100,62 @@ definitions:
       type:
         $ref: '#/definitions/order.OrderType'
     type: object
-  http.OrderRequest:
+  http_order.OrderRequest:
     properties:
       cost:
-        example: 1000
+        description: Стоимость товаров (только для типа store)
+        example: 1500
         type: number
       deposit:
-        example: 200
+        description: Депозит (только для типа personal)
+        example: 500
         type: number
       description:
-        example: Нужно привезти из Москвы в СПб
+        description: Описание задачи
+        example: Нужно привезти документы из Москвы в Санкт-Петербург
         type: string
       destination_city:
+        description: Город назначения
         example: Санкт-Петербург
         type: string
       end_date:
-        description: dd/mm/yy
+        description: Конец периода
         example: 05/06/25
         type: string
       origin_city:
+        description: Город отправления
         example: Москва
         type: string
       reward:
+        description: Вознаграждение исполнителю
         example: 100
         type: number
       start_date:
-        description: dd/mm/yy
+        description: Начало периода
         example: 01/06/25
         type: string
       store_link:
+        description: Ссылка на магазин (только для типа store)
         example: https://store.com/item/123
         type: string
       title:
+        description: Заголовок заказа
         example: Заказ на доставку
         type: string
       type:
         allOf:
         - $ref: '#/definitions/order.OrderType'
-        description: <--- ЭТО ДОБАВИТЬ
+        description: "Тип заказа: \"personal\" или \"store\"\n\U0001F537 Для \"store\"
+          обязательны поля `cost` и `store_link`\n\U0001F537 Для \"personal\" обязателен
+          `deposit`"
         example: personal
     type: object
-  http.OrderResponse:
+  http_order.OrderResponse:
     properties:
       id:
         type: integer
       order_number:
         type: string
-    type: object
-  http.TelegramAuthRequest:
-    properties:
-      initData:
-        description: данные из телеги
-        example: '...'
-        type: string
-    type: object
-  http.TelegramAuthResponse:
-    properties:
-      access_token:
-        example: eyJhbGciOiJIUzI1NiIsInR5cCI6...
-        type: string
-      tg_id:
-        type: integer
     type: object
   order.ModerationStatus:
     enum:
@@ -183,14 +188,14 @@ paths:
         name: data
         required: true
         schema:
-          $ref: '#/definitions/http.TelegramAuthRequest'
+          $ref: '#/definitions/http_auth.TelegramAuthRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/http.TelegramAuthResponse'
+            $ref: '#/definitions/http_auth.TelegramAuthResponse'
         "400":
           description: Bad request
           schema:
@@ -215,7 +220,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/http.FlightFullResponse'
+              $ref: '#/definitions/http_flight.FlightFullResponse'
             type: array
         "500":
           description: Ошибка при получении рейсов
@@ -233,14 +238,14 @@ paths:
         name: flight
         required: true
         schema:
-          $ref: '#/definitions/http.FlightRequest'
+          $ref: '#/definitions/http_flight.FlightRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/http.FlightResponse'
+            $ref: '#/definitions/http_flight.FlightResponse'
         "400":
           description: Невалидный JSON или формат даты
           schema:
@@ -256,6 +261,24 @@ paths:
       summary: Создать рейс
       tags:
       - flights
+  /flights/moderated:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/http_flight.FlightFullResponse'
+            type: array
+        "500":
+          description: Ошибка при получении рейсов
+          schema:
+            type: string
+      summary: Получить только отмодерированные рейсы
+      tags:
+      - flights
   /orders:
     get:
       produces:
@@ -265,7 +288,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/http.OrderFullResponse'
+              $ref: '#/definitions/http_order.OrderFullResponse'
             type: array
         "500":
           description: Ошибка сервера при получении заказов
@@ -283,14 +306,14 @@ paths:
         name: order
         required: true
         schema:
-          $ref: '#/definitions/http.OrderRequest'
+          $ref: '#/definitions/http_order.OrderRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/http.OrderResponse'
+            $ref: '#/definitions/http_order.OrderResponse'
         "400":
           description: Невалидный JSON или формат дат
           schema:
@@ -308,6 +331,24 @@ paths:
           schema:
             type: string
       summary: Создать заказ
+      tags:
+      - orders
+  /orders/approved:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/http_order.OrderFullResponse'
+            type: array
+        "500":
+          description: Ошибка сервера при получении заказов
+          schema:
+            type: string
+      summary: Получить только одобренные заказы
       tags:
       - orders
 swagger: "2.0"
