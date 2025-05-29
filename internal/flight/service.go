@@ -53,3 +53,7 @@ func generateFlightNumber(now time.Time, tgID int64) string {
 func (s *Service) GetAllFlights(ctx context.Context) ([]*Flight, error) {
 	return s.repo.GetAllFlights(ctx)
 }
+
+func (s *Service) GetFlightsByStatus(ctx context.Context, status ModerationStatus) ([]*Flight, error) {
+	return s.repo.GetByStatus(ctx, status)
+}

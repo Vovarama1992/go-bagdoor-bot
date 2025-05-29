@@ -156,3 +156,36 @@ func (r *PostgresRepository) GetAllOrders(ctx context.Context) ([]*Order, error)
 
 	return orders, nil
 }
+
+func (r *PostgresRepository) GetByStatus(ctx context.Context, status ModerationStatus) ([]*Order, error) {
+	query := `
+		SELECT id, order_number, user_id, publisher_username, publisher_tg_id, published_at,
+		       origin_city, destination_city, start_date, end_date,
+		       title, description, reward, deposit, cost, store_link,
+		       media_urls, type, status
+		FROM orders
+		WHERE status = $1
+		ORDER BY published_at DESC
+	`
+
+	rows, err := r.DB.Pool.Query(ctx, query, status)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var orders []*Order
+	for rows.Next() {
+		var o Order
+		if err := rows.Scan(
+			&o.ID, &o.OrderNumber, &o.UserID, &o.PublisherUsername, &o.PublisherTgID, &o.PublishedAt,
+			&o.OriginCity, &o.DestinationCity, &o.StartDate, &o.EndDate,
+			&o.Title, &o.Description, &o.Reward, &o.Deposit, &o.Cost, &o.StoreLink,
+			&o.MediaURLs, &o.Type, &o.Status,
+		); err != nil {
+			return nil, err
+		}
+		orders = append(orders, &o)
+	}
+	return orders, nil
+}

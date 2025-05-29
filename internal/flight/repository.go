@@ -6,6 +6,15 @@ import (
 	"github.com/Vovarama1992/go-bagdoor-bot/internal/db"
 )
 
+type Repository interface {
+	Create(flight *Flight) error
+	GetByID(id int) (*Flight, error)
+	UpdateMapURL(id int, url string) error
+	UpdateStatus(id int, status ModerationStatus) error
+	GetAllFlights(ctx context.Context) ([]*Flight, error)
+	GetByStatus(ctx context.Context, status ModerationStatus) ([]*Flight, error) // ← вот этого не хватает
+}
+
 type PostgresRepository struct {
 	DB *db.DB
 }
@@ -85,14 +94,6 @@ func (r *PostgresRepository) UpdateStatus(id int, status ModerationStatus) error
 	return err
 }
 
-type Repository interface {
-	Create(flight *Flight) error
-	GetByID(id int) (*Flight, error)
-	UpdateMapURL(id int, url string) error
-	UpdateStatus(id int, status ModerationStatus) error
-	GetAllFlights(ctx context.Context) ([]*Flight, error) // ← добавь это
-}
-
 func (r *PostgresRepository) GetAllFlights(ctx context.Context) ([]*Flight, error) {
 	query := `
 		SELECT id, flight_number, publisher_username, publisher_tg_id,
@@ -128,5 +129,36 @@ func (r *PostgresRepository) GetAllFlights(ctx context.Context) ([]*Flight, erro
 		flights = append(flights, &f)
 	}
 
+	return flights, nil
+}
+
+func (r *PostgresRepository) GetByStatus(ctx context.Context, status ModerationStatus) ([]*Flight, error) {
+	query := `
+		SELECT id, flight_number, publisher_username, publisher_tg_id,
+		       published_at, flight_date, description, origin, destination,
+		       status, map_url
+		FROM flights
+		WHERE status = $1
+		ORDER BY published_at DESC
+	`
+
+	rows, err := r.DB.Pool.Query(ctx, query, status)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var flights []*Flight
+	for rows.Next() {
+		var f Flight
+		if err := rows.Scan(
+			&f.ID, &f.FlightNumber, &f.PublisherUsername, &f.PublisherTgID,
+			&f.PublishedAt, &f.FlightDate, &f.Description, &f.Origin, &f.Destination,
+			&f.Status, &f.MapURL,
+		); err != nil {
+			return nil, err
+		}
+		flights = append(flights, &f)
+	}
 	return flights, nil
 }

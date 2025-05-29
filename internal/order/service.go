@@ -34,3 +34,5 @@ func (s *Service) UpdateModerationStatus(ctx context.Context, orderID int, statu
 func (s *Service) GetAllOrders(ctx context.Context) ([]*Order, error) {
 	return s.Repo.GetAllOrders(ctx)
 }
+
+func (s *Service) GetByStatus(ctx context.Context, status ModerationStatus) ([]*Order, error)

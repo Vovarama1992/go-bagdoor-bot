@@ -5,10 +5,10 @@ import "time"
 type ModerationStatus string
 
 const (
-	StatusPending  ModerationStatus = "pending"
-	StatusApproved ModerationStatus = "approved"
-	StatusRejected ModerationStatus = "rejected"
-	StatusDeleted  ModerationStatus = "deleted"
+	StatusPending  ModerationStatus = "ожидает модерации"
+	StatusApproved ModerationStatus = "отмодерирован и опубликован"
+	StatusRejected ModerationStatus = "отклонён"
+	StatusDeleted  ModerationStatus = "удалён"
 )
 
 type Flight struct {

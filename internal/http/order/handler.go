@@ -156,6 +156,52 @@ func (deps OrderDeps) getAllOrdersHandler(w http.ResponseWriter, r *http.Request
 	json.NewEncoder(w).Encode(response)
 }
 
+// @Summary Получить только одобренные заказы
+// @Tags orders
+// @Produce json
+// @Success 200 {array} OrderFullResponse
+// @Failure 500 {string} string "Ошибка сервера при получении заказов"
+// @Router /orders/approved [get]
+func (deps OrderDeps) getApprovedOrdersHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Метод не поддерживается", http.StatusMethodNotAllowed)
+		return
+	}
+
+	ctx := r.Context()
+	orders, err := deps.OrderService.GetByStatus(ctx, order.StatusApproved)
+	if err != nil {
+		http.Error(w, "Ошибка при получении заказов", http.StatusInternalServerError)
+		return
+	}
+
+	var response []OrderFullResponse
+	for _, o := range orders {
+		response = append(response, OrderFullResponse{
+			ID:                o.ID,
+			OrderNumber:       o.OrderNumber,
+			PublisherUsername: o.PublisherUsername,
+			PublisherTgID:     o.PublisherTgID,
+			PublishedAt:       o.PublishedAt,
+			OriginCity:        o.OriginCity,
+			DestinationCity:   o.DestinationCity,
+			StartDate:         o.StartDate,
+			EndDate:           o.EndDate,
+			Title:             o.Title,
+			Description:       o.Description,
+			StoreLink:         o.StoreLink,
+			Reward:            o.Reward,
+			Deposit:           o.Deposit,
+			Cost:              o.Cost,
+			MediaURLs:         o.MediaURLs,
+			Type:              o.Type,
+			Status:            o.Status,
+		})
+	}
+
+	json.NewEncoder(w).Encode(response)
+}
+
 func RegisterRoutes(mux *http.ServeMux, deps OrderDeps) {
 	mux.HandleFunc("/orders", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
@@ -168,4 +214,5 @@ func RegisterRoutes(mux *http.ServeMux, deps OrderDeps) {
 		}
 	})
 
+	mux.HandleFunc("/orders/approved", deps.getApprovedOrdersHandler)
 }
