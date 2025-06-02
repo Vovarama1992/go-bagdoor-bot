@@ -19,7 +19,7 @@ func ValidateTelegramInitData(initData, botToken string) (map[string]string, boo
 	var checkStrings []string
 
 	for k, v := range parsed {
-		if k == "hash" {
+		if k == "hash" || k == "signature" {
 			continue
 		}
 		data[k] = v[0]
@@ -34,5 +34,10 @@ func ValidateTelegramInitData(initData, botToken string) (map[string]string, boo
 	mac.Write([]byte(dataCheckString))
 	expected := hex.EncodeToString(mac.Sum(nil))
 
-	return data, expected == parsed.Get("hash")
+	actual := parsed.Get("hash")
+	if actual == "" {
+		actual = parsed.Get("signature")
+	}
+
+	return data, expected == actual
 }
