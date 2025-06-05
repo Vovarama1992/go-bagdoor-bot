@@ -4,14 +4,18 @@ import (
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/hex"
+	"fmt"
 	"net/url"
 	"sort"
 	"strings"
 )
 
 func ValidateTelegramInitData(initData, botToken string) (map[string]string, bool) {
+	fmt.Println("[auth] 📥 Raw initData:", initData)
+
 	parsed, err := url.ParseQuery(initData)
 	if err != nil {
+		fmt.Println("[auth] ❌ Failed to parse initData:", err)
 		return nil, false
 	}
 
@@ -22,8 +26,9 @@ func ValidateTelegramInitData(initData, botToken string) (map[string]string, boo
 		if k == "hash" || k == "signature" {
 			continue
 		}
-		data[k] = v[0]
-		checkStrings = append(checkStrings, k+"="+v[0])
+		value := v[0]
+		data[k] = value
+		checkStrings = append(checkStrings, k+"="+value)
 	}
 
 	sort.Strings(checkStrings)
@@ -39,5 +44,14 @@ func ValidateTelegramInitData(initData, botToken string) (map[string]string, boo
 		actual = parsed.Get("signature")
 	}
 
-	return data, expected == actual
+	// Логируем всё
+	fmt.Println("[auth] 📋 Sorted data strings:")
+	for _, s := range checkStrings {
+		fmt.Println("  ", s)
+	}
+	fmt.Println("[auth] 🔐 dataCheckString:\n" + dataCheckString)
+	fmt.Println("[auth] 🔑 Expected hash:", expected)
+	fmt.Println("[auth] 🆚 Provided hash:", actual)
+
+	return data, hmac.Equal([]byte(expected), []byte(actual))
 }
