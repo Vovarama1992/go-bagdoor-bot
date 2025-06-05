@@ -2,6 +2,7 @@ package http_auth
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"os"
 	"strconv"
@@ -35,33 +36,55 @@ type TelegramAuthResponse struct {
 func (deps AuthDeps) TelegramAuthHandler(w http.ResponseWriter, r *http.Request) {
 	var body TelegramAuthRequest
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		fmt.Println("[auth] ❌ Failed to decode JSON:", err)
 		http.Error(w, "Bad request", http.StatusBadRequest)
 		return
 	}
 
-	data, ok := auth.ValidateTelegramInitData(body.InitData, os.Getenv("TELEGRAM_BOT_TOKEN"))
+	fmt.Println("[auth] ✅ Received init_data:", body.InitData)
+
+	botToken := os.Getenv("TELEGRAM_BOT_TOKEN")
+	if botToken == "" {
+		fmt.Println("[auth] ❌ Missing TELEGRAM_BOT_TOKEN")
+		http.Error(w, "Server config error", http.StatusInternalServerError)
+		return
+	}
+
+	data, ok := auth.ValidateTelegramInitData(body.InitData, botToken)
 	if !ok {
+		fmt.Println("[auth] ❌ Invalid signature for init_data")
 		http.Error(w, "Invalid signature", http.StatusUnauthorized)
 		return
 	}
 
-	tgID, _ := parseInt64(data["user.id"])
+	fmt.Println("[auth] ✅ Signature valid, extracted data:", data)
+
+	tgID, err := parseInt64(data["user.id"])
+	if err != nil {
+		fmt.Println("[auth] ❌ Failed to parse user.id:", err)
+		http.Error(w, "Bad Telegram ID", http.StatusBadRequest)
+		return
+	}
+
 	username := data["user.username"]
 	first := data["user.first_name"]
 	last := data["user.last_name"]
 
 	ctx := r.Context()
 	if _, err := deps.UserService.FindOrCreateFromTelegram(ctx, tgID, username, first, last); err != nil {
+		fmt.Println("[auth] ❌ Failed to create/find user:", err)
 		http.Error(w, "User error", http.StatusInternalServerError)
 		return
 	}
 
 	token, err := auth.GenerateTokenWithTgID(tgID)
 	if err != nil {
+		fmt.Println("[auth] ❌ Failed to generate token:", err)
 		http.Error(w, "Token error", http.StatusInternalServerError)
 		return
 	}
 
+	fmt.Println("[auth] ✅ Auth successful for user:", tgID)
 	json.NewEncoder(w).Encode(TelegramAuthResponse{
 		AccessToken: token,
 	})
