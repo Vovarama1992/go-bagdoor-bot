@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
-	"strconv"
 
 	"github.com/Vovarama1992/go-bagdoor-bot/internal/auth"
 	"github.com/Vovarama1992/go-bagdoor-bot/internal/user"
@@ -74,32 +74,48 @@ func (deps AuthDeps) TelegramAuthHandler(w http.ResponseWriter, r *http.Request)
 
 	fmt.Println("[auth] ✅ Signature valid, extracted data:", data)
 
-	tgID, err := parseInt64(data["user.id"])
-	if err != nil {
-		fmt.Println("[auth] ❌ Failed to parse user.id:", err)
-		http.Error(w, "Bad Telegram ID", http.StatusBadRequest)
+	userRaw, ok := data["user"]
+	if !ok {
+		fmt.Println("[auth] ❌ user field missing")
+		http.Error(w, "Missing user", http.StatusBadRequest)
 		return
 	}
 
-	username := data["user.username"]
-	first := data["user.first_name"]
-	last := data["user.last_name"]
+	userDecoded, err := url.QueryUnescape(userRaw)
+	if err != nil {
+		fmt.Println("[auth] ❌ Failed to decode user json:", err)
+		http.Error(w, "Decode error", http.StatusBadRequest)
+		return
+	}
+
+	var tgUser struct {
+		ID        int64  `json:"id"`
+		Username  string `json:"username"`
+		FirstName string `json:"first_name"`
+		LastName  string `json:"last_name"`
+	}
+
+	if err := json.Unmarshal([]byte(userDecoded), &tgUser); err != nil {
+		fmt.Println("[auth] ❌ Failed to parse user json:", err)
+		http.Error(w, "User parse error", http.StatusBadRequest)
+		return
+	}
 
 	ctx := r.Context()
-	if _, err := deps.UserService.FindOrCreateFromTelegram(ctx, tgID, username, first, last); err != nil {
+	if _, err := deps.UserService.FindOrCreateFromTelegram(ctx, tgUser.ID, tgUser.Username, tgUser.FirstName, tgUser.LastName); err != nil {
 		fmt.Println("[auth] ❌ Failed to create/find user:", err)
 		http.Error(w, "User error", http.StatusInternalServerError)
 		return
 	}
 
-	token, err := auth.GenerateTokenWithTgID(tgID)
+	token, err := auth.GenerateTokenWithTgID(tgUser.ID)
 	if err != nil {
 		fmt.Println("[auth] ❌ Failed to generate token:", err)
 		http.Error(w, "Token error", http.StatusInternalServerError)
 		return
 	}
 
-	fmt.Println("[auth] ✅ Auth successful for user:", tgID)
+	fmt.Println("[auth] ✅ Auth successful for user:", tgUser.ID)
 	json.NewEncoder(w).Encode(TelegramAuthResponse{
 		AccessToken: token,
 	})
@@ -107,8 +123,4 @@ func (deps AuthDeps) TelegramAuthHandler(w http.ResponseWriter, r *http.Request)
 
 func RegisterRoutes(mux *http.ServeMux, deps AuthDeps) {
 	mux.HandleFunc("/auth/telegram", deps.TelegramAuthHandler)
-}
-
-func parseInt64(s string) (int64, error) {
-	return strconv.ParseInt(s, 10, 64)
 }
