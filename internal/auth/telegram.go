@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	"net/url"
 	"sort"
 	"strings"
 )
@@ -30,7 +31,14 @@ func ValidateTelegramInitData(initData, botToken string) (map[string]string, boo
 		}
 
 		data[key] = value
-		checkStrings = append(checkStrings, key+"="+value)
+
+		decodedValue, err := url.QueryUnescape(value)
+		if err != nil {
+			fmt.Println("[auth] ⚠️ Failed to decode value for key:", key, err)
+			continue
+		}
+
+		checkStrings = append(checkStrings, key+"="+decodedValue)
 	}
 
 	sort.Strings(checkStrings)
