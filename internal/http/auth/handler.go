@@ -3,6 +3,7 @@ package http_auth
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
 	"strconv"
@@ -27,21 +28,35 @@ type TelegramAuthResponse struct {
 // @Tags auth
 // @Accept json
 // @Produce json
-// @Param data body TelegramAuthRequest true "Init data от Telegram"
+// @Param data body object true "Init data от Telegram"
 // @Success 200 {object} TelegramAuthResponse
 // @Failure 400 {string} string "Bad request"
 // @Failure 401 {string} string "Invalid signature"
 // @Failure 500 {string} string "User error или Token error"
 // @Router /auth/telegram [post]
 func (deps AuthDeps) TelegramAuthHandler(w http.ResponseWriter, r *http.Request) {
-	var body TelegramAuthRequest
-	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		fmt.Println("[auth] ❌ Failed to decode JSON:", err)
+	raw, err := io.ReadAll(r.Body)
+	if err != nil {
+		fmt.Println("[auth] ❌ Failed to read request body:", err)
 		http.Error(w, "Bad request", http.StatusBadRequest)
 		return
 	}
 
-	fmt.Println("[auth] ✅ Received init_data:", body.InitData)
+	var rawMap map[string]json.RawMessage
+	if err := json.Unmarshal(raw, &rawMap); err != nil {
+		fmt.Println("[auth] ❌ Failed to parse JSON:", err)
+		http.Error(w, "Bad JSON", http.StatusBadRequest)
+		return
+	}
+
+	var initData string
+	if err := json.Unmarshal(rawMap["init_data"], &initData); err != nil {
+		fmt.Println("[auth] ❌ Failed to extract init_data:", err)
+		http.Error(w, "Invalid init_data", http.StatusBadRequest)
+		return
+	}
+
+	fmt.Println("[auth] ✅ Received init_data:", initData)
 
 	botToken := os.Getenv("TELEGRAM_BOT_TOKEN")
 	if botToken == "" {
@@ -50,7 +65,7 @@ func (deps AuthDeps) TelegramAuthHandler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	data, ok := auth.ValidateTelegramInitData(body.InitData, botToken)
+	data, ok := auth.ValidateTelegramInitData(initData, botToken)
 	if !ok {
 		fmt.Println("[auth] ❌ Invalid signature for init_data")
 		http.Error(w, "Invalid signature", http.StatusUnauthorized)
